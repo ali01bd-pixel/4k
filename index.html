@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="Convert SVG files to editable EPS directly in your browser. No uploads required.">
+  <title>SVG to EPS Converter — Private, Client-Side</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="SVG to EPS Converter">
+        <span class="brand-mark">S</span>
+        <span>
+          <strong>SVG → EPS</strong>
+          <small>Vector Converter</small>
+        </span>
+      </a>
+      <div class="top-actions">
+        <span class="privacy-pill"><span class="dot"></span> Runs in your browser</span>
+        <button id="themeBtn" class="icon-btn" type="button" aria-label="Toggle theme" title="Toggle theme">☼</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">FAST • PRIVATE • NO SERVER</p>
+          <h1>Convert SVG to production-ready EPS.</h1>
+          <p class="hero-copy">Drop one or more SVG files. The converter preserves vector geometry, transforms, fills, strokes, clipping, paths and common shapes, then creates a self-contained EPS file you can open directly in Illustrator, CorelDRAW and other PostScript workflows.</p>
+        </div>
+        <div class="hero-badges">
+          <span>✓ Client-side</span>
+          <span>✓ Batch-ready</span>
+          <span>✓ EPSF-3.0</span>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div class="panel upload-panel">
+          <input id="fileInput" type="file" accept=".svg,image/svg+xml" multiple hidden>
+          <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload SVG files">
+            <div class="drop-icon">↥</div>
+            <h2>Drop SVG files here</h2>
+            <p>or click to browse from your computer</p>
+            <button id="browseBtn" type="button" class="primary-btn">Choose SVG files</button>
+            <div class="upload-meta">SVG / SVGZ not required • Multiple files supported</div>
+          </div>
+
+          <div class="quick-row">
+            <div class="mini-stat"><span id="fileCount">0</span><small>files</small></div>
+            <div class="mini-stat"><span id="readyCount">0</span><small>ready</small></div>
+            <div class="mini-stat"><span id="errorCount">0</span><small>errors</small></div>
+            <button id="clearBtn" class="secondary-btn" type="button">Clear all</button>
+          </div>
+        </div>
+
+        <aside class="panel settings-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">OUTPUT</p>
+              <h2>EPS settings</h2>
+            </div>
+          </div>
+
+          <label class="field-label" for="pageMode">Canvas</label>
+          <select id="pageMode" class="field">
+            <option value="artboard">SVG artboard / viewBox</option>
+            <option value="a4">A4 portrait</option>
+            <option value="a4landscape">A4 landscape</option>
+            <option value="letter">US Letter portrait</option>
+            <option value="letterlandscape">US Letter landscape</option>
+          </select>
+
+          <div class="two-col">
+            <div>
+              <label class="field-label" for="scale">Scale</label>
+              <div class="input-suffix"><input id="scale" class="field" type="number" min="0.01" step="0.01" value="1"><span>×</span></div>
+            </div>
+            <div>
+              <label class="field-label" for="dpi">Unit DPI</label>
+              <div class="input-suffix"><input id="dpi" class="field" type="number" min="1" step="1" value="96"><span>dpi</span></div>
+            </div>
+          </div>
+
+          <label class="check-row"><input id="embedFonts" type="checkbox" checked><span><b>Preserve SVG text</b><small>Uses PostScript fonts for live text.</small></span></label>
+          <label class="check-row"><input id="convertImages" type="checkbox" checked><span><b>Embed raster images</b><small>Images are embedded instead of external links.</small></span></label>
+          <label class="check-row"><input id="strict" type="checkbox" checked><span><b>Strict mode</b><small>Warn before converting unsupported SVG features.</small></span></label>
+
+          <div class="notice">Best results come from SVGs containing paths and outlined artwork. CSS filters, animations and unsupported effects are reported instead of being silently ignored.</div>
+        </aside>
+      </section>
+
+      <section class="panel queue-panel">
+        <div class="panel-heading queue-heading">
+          <div>
+            <p class="eyebrow">QUEUE</p>
+            <h2>Conversion queue</h2>
+          </div>
+          <button id="convertAllBtn" type="button" class="primary-btn" disabled>Convert all</button>
+        </div>
+
+        <div id="emptyQueue" class="empty-state">
+          <div class="empty-icon">◇</div>
+          <p>Your SVG files will appear here.</p>
+          <small>Nothing is uploaded to a server.</small>
+        </div>
+        <div id="queue" class="queue" aria-live="polite"></div>
+      </section>
+
+      <section class="feature-grid">
+        <article class="feature-card"><span>01</span><h3>True vector output</h3><p>Paths, curves, rectangles, circles, ellipses, polygons, transforms and common styles are written as PostScript vector instructions.</p></article>
+        <article class="feature-card"><span>02</span><h3>Print-safe framing</h3><p>Each download includes EPSF-3.0 headers, BoundingBox data, HiResBoundingBox and deterministic document metadata.</p></article>
+        <article class="feature-card"><span>03</span><h3>No upload required</h3><p>The SVG bytes are read locally by your browser. There is no conversion API, account or storage layer in this GitHub Pages build.</p></article>
+      </section>
+
+      <footer class="footer">
+        <span>SVG → EPS Converter</span>
+        <span>GitHub Pages compatible • MIT-friendly frontend</span>
+      </footer>
+    </main>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
