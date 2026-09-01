@@ -1,10 +1,9 @@
 (() => {
   'use strict';
 
-  const state = {
-    files: new Map(),
-    theme: localStorage.getItem('svg-eps-theme') || 'dark'
-  };
+  let savedTheme = 'dark';
+  try { savedTheme = localStorage.getItem('svg-eps-theme') || 'dark'; } catch (_) {}
+  const state = { files: new Map(), theme: savedTheme };
 
   const $ = (id) => document.getElementById(id);
   const els = {
@@ -20,7 +19,7 @@
 
   els.themeBtn.addEventListener('click', () => {
     state.theme = document.body.classList.toggle('light') ? 'light' : 'dark';
-    localStorage.setItem('svg-eps-theme', state.theme);
+    try { localStorage.setItem('svg-eps-theme', state.theme); } catch (_) {}
     els.themeBtn.textContent = state.theme === 'light' ? '☾' : '☼';
   });
 
@@ -137,43 +136,43 @@
     const warnings = [];
     const defs = collectDefs(root);
     const dims = resolveCanvas(root, options);
-    const ctx = { defs, warnings, options, root, dimensions: dims, clipCounter: 0, useCounter: 0, referencedIds: new Set() };
+    const ctx = { defs, warnings, options, root, dimensions: dims, clipCounter: 0, useCounter: 0, referencedIds: new Set(), warnedTextFont: false };
     const body = [];
     body.push(`${fmt(dims.width)} 0 translate origin`); // harmless marker consumed by our own parser? removed below
     body.pop();
     body.push('gsave');
-    body.push(`${fmt(options.scale)} 0 0 ${fmt(options.scale)} 0 0 scale`);
-    // EPS uses a bottom-left origin; SVG uses a top-left visual coordinate system.
-    body.push(`1 0 0 -1 0 ${fmt(dims.height)} translate`);
-    if (dims.vb) body.push(`${fmt(-dims.vb.x)} ${fmt(-dims.vb.y)} translate`);
+    // Use one matrix for the SVG top-left -> EPS bottom-left conversion. Keeping
+    // the scale inside this matrix avoids an Illustrator/Ghostscript font edge case
+    // caused by an identity `scale` followed by a reflected CTM.
+    body.push(`[${fmt(options.scale)} 0 0 ${fmt(-options.scale)} 0 ${fmt(dims.height)}] concat`);
+    if (dims.vb) body.push(`[1 0 0 1 ${fmt(-dims.vb.x)} ${fmt(-dims.vb.y)}] concat`);
 
     const styleCache = new Map();
     walkChildren(root, body, ctx, identity(), inheritedStyle(null), styleCache);
     body.push('grestore');
-    body.push('showpage');
 
     const bbox = computeBBox(dims);
-    const title = (root.getAttribute('id') || 'SVG artwork').replace(/[\r\n]/g, ' ');
+    const title = sanitizeDsc(root.getAttribute('id') || 'SVG artwork');
     const date = new Date().toISOString().replace('T',' ').replace(/\.\d{3}Z$/,' UTC');
     const header = [
       '%!PS-Adobe-3.0 EPSF-3.0',
       `%%Title: ${title}`,
       '%%Creator: SVG to EPS Converter (GitHub Pages)',
       `%%CreationDate: ${date}`,
-      '%%LanguageLevel: 3',
+      '%%LanguageLevel: 2',
       `%%BoundingBox: ${bbox.join(' ')}`,
       `%%HiResBoundingBox: ${bbox.map(n => Number(n).toFixed(4)).join(' ')}`,
-      `%%Pages: 1`,
+      '%%Pages: 1',
+      '%%DocumentNeededResources: font Helvetica',
       '%%EndComments',
       '%%BeginProlog',
-      '/origin { translate } bind def',
-      '/rgb { setrgbcolor } bind def',
-      '/cmyk { setcmykcolor } bind def',
-      '/sg { gsave } bind def',
-      '/eg { grestore } bind def',
+      '/EPSsave save def',
       '%%EndProlog',
-      '%%Page: 1 1',
+      '%%BeginSetup',
+      '%%EndSetup',
       body.join('\n'),
+      'EPSsave restore',
+      '%%Trailer',
       '%%EOF',
       ''
     ].join('\n');
@@ -358,18 +357,35 @@
     if(!text) return;
     const x=numberFromLength(el.getAttribute('x'))||0, y=numberFromLength(el.getAttribute('y'))||0;
     const p=transformPoint(matrix,x,y);
+    const h=ctx.dimensions.height;
+    const vb=ctx.dimensions.vb;
+    // Render text with the default positive CTM. This makes the EPS safe for
+    // Illustrator/PostScript font engines while preserving the document's SVG
+    // coordinate mapping explicitly.
+    out.push('gsave');
+    out.push('initmatrix');
+    const scale=ctx.options.scale;
+    const epsTextX=(p[0] - (vb ? vb.x : 0)) * scale;
+    const epsTextY=h - (p[1] - (vb ? vb.y : 0)) * scale;
     const family=psFontName(style.fontFamily || 'Helvetica');
-    const size=Number(style.fontSize)||16;
-    if (style.fontStyle === 'italic') out.push(`/${family}-Oblique`);
-    else if (style.fontWeight === 'bold' || Number(style.fontWeight)>=600) out.push(`/${family}-Bold`);
-    else out.push(`/${family}`);
-    // Select a robust PostScript base font; common family names map to standard fonts.
-    const font = style.fontWeight === 'bold' ? `${family}-Bold` : (style.fontStyle === 'italic' ? `${family}-Oblique` : family);
+    const size=Math.max(0.01, Number(style.fontSize)||16);
+    const bold = style.fontWeight === 'bold' || Number(style.fontWeight)>=600;
+    const italic = style.fontStyle === 'italic' || style.fontStyle === 'oblique';
+    let font = family;
+    if (family === 'Times-Roman') font = italic ? 'Times-Italic' : (bold ? 'Times-Bold' : 'Times-Roman');
+    else if (family === 'Courier') font = italic ? 'Courier-Oblique' : (bold ? 'Courier-Bold' : 'Courier');
+    else font = italic ? 'Helvetica-Oblique' : (bold ? 'Helvetica-Bold' : 'Helvetica');
     out.push(`/${font} findfont ${fmt(size)} scalefont setfont`);
-    applyOpacity(out, style.opacity);
     applyColor(out, style.fill || '#000000');
-    out.push(`${fmt(p[0])} ${fmt(p[1])} moveto (${escapePs(text)}) show`);
-    if(ctx.options.preserveText===false) ctx.warnings.push('Text retained as PostScript text; outlining is not available for arbitrary user fonts.');
+    out.push(`${fmt(epsTextX)} ${fmt(epsTextY)} moveto (${escapePs(text)}) show`);
+    out.push('grestore');
+    if (!ctx.warnedTextFont) {
+      const requested=String(style.fontFamily || 'Helvetica').replace(/[\"']/g,'').split(',')[0].trim();
+      if (!/^(Helvetica|Arial|sans-serif|Times|Times New Roman|serif|Courier|Courier New|monospace)$/i.test(requested)) {
+        ctx.warnings.push(`Text uses the PostScript fallback font Helvetica; original font “${requested}” is not embedded.`);
+      }
+      ctx.warnedTextFont=true;
+    }
   }
 
   function psFontName(family) {
@@ -404,7 +420,7 @@
   function applyColor(out,color){
     const c=parseColor(color);
     if(!c) return;
-    if(c.space==='cmyk') out.push(`${fmt(c.c)} ${fmt(c.m)} ${fmt(c.y)} ${fmt(c.k)} cmyk`); else out.push(`${fmt(c.r)} ${fmt(c.g)} ${fmt(c.b)} rgb`);
+    if(c.space==='cmyk') out.push(`${fmt(c.c)} ${fmt(c.m)} ${fmt(c.y)} ${fmt(c.k)} setcmykcolor`); else out.push(`${fmt(c.r)} ${fmt(c.g)} ${fmt(c.b)} setrgbcolor`);
   }
   function applyOpacity(out,opacity){ const a=Math.min(1,Math.max(0,Number(opacity)||1)); if(a<1) { /* PostScript transparency is not portable; approximate by no-op and warn upstream. */ } }
 
@@ -539,7 +555,19 @@
   function parseViewBox(v){ if(!v)return null; const a=v.replace(/,/g,' ').trim().split(/\s+/).map(Number); return a.length>=4&&a.every(Number.isFinite)?{x:a[0],y:a[1],width:a[2],height:a[3]}:null; }
   function numberFromLength(v){ if(v===null||v===undefined||v==='')return 0; const m=String(v).trim().match(/^[-+]?(?:\d*\.\d+|\d+\.?)(?:e[-+]?\d+)?/i); return m?Number(m[0]):0; }
   function fmt(n){ const x=Math.abs(n)<1e-8?0:n; return Number(x.toFixed(5)).toString(); }
-  function escapePs(s){ return String(s).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)').replace(/[\r\n]/g,' '); }
+  function escapePs(s){
+    return Array.from(String(s)).map(ch=>{
+      const code=ch.codePointAt(0);
+      if (ch==='\\') return '\\\\';
+      if (ch==='(') return '\\(';
+      if (ch===')') return '\\)';
+      if (ch==='\r' || ch==='\n') return ' ';
+      if (code>=32 && code<=126) return ch;
+      if (code<=255) return '\\'+code.toString(8).padStart(3,'0');
+      return '?';
+    }).join('');
+  }
+  function sanitizeDsc(s){ return String(s).replace(/[\r\n]/g,' ').replace(/[^\x20-\x7E]/g,'?').slice(0,180); }
   function parseColor(value){
     if(!value || value==='none') return null; let v=String(value).trim().toLowerCase();
     if(v==='transparent') return {space:'rgb',r:1,g:1,b:1};

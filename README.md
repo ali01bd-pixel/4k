@@ -27,3 +27,11 @@ No Node.js build step is required.
 This frontend intentionally reports unsupported SVG effects rather than pretending they were reproduced. Complex filters, arbitrary external fonts, masks, blend modes and raster-image decoding need a dedicated rendering engine for pixel-perfect parity.
 
 For professional artwork where exact Illustrator/CorelDRAW reproduction is mandatory, consider a WASM-based rendering backend or a server-side converter built with Inkscape/librsvg/Ghostscript. The static GitHub Pages build is best for clean vector SVG artwork.
+
+## Important text/font behavior
+
+SVG text is kept as live PostScript text when possible. GitHub Pages cannot silently access or embed arbitrary fonts installed on the visitor's computer, so non-standard SVG fonts are mapped to a PostScript base font and reported once per file. For artwork that must match a particular font exactly, outline the text in the source SVG before conversion.
+
+## EPS compatibility
+
+The converter emits a conservative EPSF-3.0 file without `showpage`, `%%Page` directives, or non-standard transparency operators. This avoids common Illustrator import failures caused by malformed or overly generic PostScript output.

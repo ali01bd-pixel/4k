@@ -28,8 +28,8 @@
       <section class="hero">
         <div>
           <p class="eyebrow">FAST • PRIVATE • NO SERVER</p>
-          <h1>Convert SVG to production-ready EPS.</h1>
-          <p class="hero-copy">Drop one or more SVG files. The converter preserves vector geometry, transforms, fills, strokes, clipping, paths and common shapes, then creates a self-contained EPS file you can open directly in Illustrator, CorelDRAW and other PostScript workflows.</p>
+          <h1>Convert SVG to Illustrator-compatible EPS.</h1>
+          <p class="hero-copy">Drop one or more SVG files. The converter writes standards-based EPSF output with vector paths, fills, strokes, curves, transforms and common shapes. Unsupported SVG effects are reported clearly instead of producing a corrupt EPS.</p>
         </div>
         <div class="hero-badges">
           <span>✓ Client-side</span>
@@ -85,7 +85,7 @@
             </div>
           </div>
 
-          <label class="check-row"><input id="embedFonts" type="checkbox" checked><span><b>Preserve SVG text</b><small>Uses PostScript fonts for live text.</small></span></label>
+          <label class="check-row"><input id="embedFonts" type="checkbox" checked><span><b>Keep text editable</b><small>Uses Illustrator/PostScript-compatible base fonts; original user fonts are not embedded.</small></span></label>
           <label class="check-row"><input id="convertImages" type="checkbox" checked><span><b>Embed raster images</b><small>Images are embedded instead of external links.</small></span></label>
           <label class="check-row"><input id="strict" type="checkbox" checked><span><b>Strict mode</b><small>Warn before converting unsupported SVG features.</small></span></label>
 
@@ -112,7 +112,7 @@
 
       <section class="feature-grid">
         <article class="feature-card"><span>01</span><h3>True vector output</h3><p>Paths, curves, rectangles, circles, ellipses, polygons, transforms and common styles are written as PostScript vector instructions.</p></article>
-        <article class="feature-card"><span>02</span><h3>Print-safe framing</h3><p>Each download includes EPSF-3.0 headers, BoundingBox data, HiResBoundingBox and deterministic document metadata.</p></article>
+        <article class="feature-card"><span>02</span><h3>Print-safe framing</h3><p>Each download includes clean EPSF-3.0 structure, BoundingBox data and Illustrator-friendly DSC metadata.</p></article>
         <article class="feature-card"><span>03</span><h3>No upload required</h3><p>The SVG bytes are read locally by your browser. There is no conversion API, account or storage layer in this GitHub Pages build.</p></article>
       </section>
 
