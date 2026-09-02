@@ -19,6 +19,186 @@
     mono: { name:"Monochrome", bg:"#101116", a:"#eeeeef", b:"#727681", c:"#ffffff", d:"#2e313a" }
   };
 
+  const DESIGN_MODE_NAMES = ['Cyan Geometric Editorial',
+    'Pastel Editorial',
+    'Minimal Editorial',
+    'Abstract Editorial',
+    'Modern Editorial',
+    'Luxury Editorial',
+    'Bold Editorial',
+    'Fashion Editorial',
+    'Organic Editorial',
+    'Creative Editorial',
+    'Abstract Geometry',
+    'Organic Geometry',
+    'Fluid Geometry',
+    'Soft Geometry',
+    'Bold Geometry',
+    'Minimal Geometry',
+    'Geometric Layers',
+    'Geometric Collage',
+    'Geometric Shapes',
+    'Geometric Waves',
+    'Liquid Abstract',
+    'Fluid Abstract',
+    'Organic Abstract',
+    'Soft Abstract',
+    'Dreamy Abstract',
+    'Modern Abstract',
+    'Minimal Abstract',
+    'Bold Abstract',
+    'Contemporary Abstract',
+    'Experimental Abstract',
+    'Bubble Abstract',
+    'Liquid Bubbles',
+    'Organic Bubbles',
+    'Soft Bubbles',
+    'Gradient Bubbles',
+    'Floating Bubbles',
+    '3D Bubbles',
+    'Bubble Composition',
+    'Bubble Pattern',
+    'Bubble Shapes',
+    'Pastel Geometry',
+    'Pastel Abstract',
+    'Pastel Shapes',
+    'Pastel Gradient',
+    'Pastel Memphis',
+    'Pastel Collage',
+    'Pastel Organic',
+    'Pastel Wave',
+    'Pastel Blob',
+    'Pastel Minimal',
+    'Retro Geometry',
+    'Retro Abstract',
+    'Retro Collage',
+    'Retro Shapes',
+    'Retro Wave',
+    'Retro Memphis',
+    'Retro Groovy',
+    'Vintage Geometry',
+    'Vintage Collage',
+    'Vintage Abstract',
+    'Memphis Geometry',
+    'Memphis Shapes',
+    'Memphis Pattern',
+    'Memphis Abstract',
+    'Modern Memphis',
+    'Playful Geometry',
+    'Playful Shapes',
+    'Playful Abstract',
+    'Color Block Abstract',
+    'Color Block Geometry',
+    'Gradient Geometry',
+    'Gradient Abstract',
+    'Gradient Mesh',
+    'Gradient Waves',
+    'Gradient Blobs',
+    'Iridescent Abstract',
+    'Chromatic Abstract',
+    'Prismatic Abstract',
+    'Holographic Abstract',
+    'Neon Abstract',
+    'Minimal Organic',
+    'Organic Blobs',
+    'Organic Shapes',
+    'Organic Waves',
+    'Organic Lines',
+    'Organic Forms',
+    'Organic Composition',
+    'Soft Organic',
+    'Natural Abstract',
+    'Biomorphic Shapes',
+    'Marble Abstract',
+    'Liquid Marble',
+    'Stone Abstract',
+    'Ink Abstract',
+    'Ink Shapes',
+    'Ink Flow',
+    'Paint Flow',
+    'Paint Splash',
+    'Brush Abstract',
+    'Fluid Splash',
+    'Mandala Geometry',
+    'Sacred Geometry',
+    'Kaleidoscope Pattern',
+    'Radial Pattern',
+    'Circular Pattern',
+    'Concentric Pattern',
+    'Ornamental Geometry',
+    'Decorative Geometry',
+    'Symmetrical Pattern',
+    'Geometric Ornament',
+    'Botanical Abstract',
+    'Floral Abstract',
+    'Leaf Pattern',
+    'Botanical Shapes',
+    'Tropical Abstract',
+    'Nature Abstract',
+    'Petal Composition',
+    'Floral Geometry',
+    'Organic Floral',
+    'Botanical Pattern',
+    'Art Deco Geometry',
+    'Art Nouveau Pattern',
+    'Moroccan Geometry',
+    'Islamic Geometry',
+    'Decorative Pattern',
+    'Luxury Pattern',
+    'Elegant Ornament',
+    'Classic Ornament',
+    'Modern Ornament',
+    'Ornamental Pattern',
+    'Y2K Abstract',
+    'Y2K Geometry',
+    'Y2K Gradient',
+    'Y2K Bubble',
+    'Vaporwave Abstract',
+    'Synthwave Geometry',
+    'Cyber Gradient',
+    'Digital Abstract',
+    'Futuristic Geometry',
+    'Tech Abstract',
+    'Halftone Abstract',
+    'Dot Pattern',
+    'Polka Dot Geometry',
+    'Grid Abstract',
+    'Checkerboard Abstract',
+    'Line Pattern',
+    'Wave Pattern',
+    'Spiral Pattern',
+    'Seamless Pattern',
+    'Abstract Pattern'];
+
+  const DESIGN_MODE_VALUES = DESIGN_MODE_NAMES.map(name => name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""));
+  const DESIGN_MODE_LOOKUP = Object.fromEntries(DESIGN_MODE_NAMES.map((name,i)=>[DESIGN_MODE_VALUES[i], name]));
+
+  function hashText(text){
+    let h=2166136261>>>0;
+    for(let i=0;i<text.length;i++){ h^=text.charCodeAt(i); h=Math.imul(h,16777619); }
+    return h>>>0;
+  }
+
+  function familyForMode(name){
+    const n=name.toLowerCase();
+    const choose=(a)=>a[hashText(name)%a.length];
+    if(/bubble|bubbles/.test(n)) return choose(["bubbleBloom","ringCluster","gradientField"]);
+    if(/mandala|sacred|kaleidoscope|radial|circular|concentric|ornament|decorative|pattern/.test(n)) return choose(["ringCluster","radialFan","capsuleGrid","mosaicSteps"]);
+    if(/botanical|floral|leaf|tropical|nature|petal|organic/.test(n)) return choose(["pebbleScatter","bubbleBloom","archStack","ringCluster"]);
+    if(/liquid|fluid|ink|paint|marble|stone|splash|brush/.test(n)) return choose(["gradientField","pebbleScatter","bubbleBloom","radialFan"]);
+    if(/gradient|iridescent|chromatic|prismatic|holographic|neon|cyber|vaporwave|synthwave|y2k/.test(n)) return choose(["gradientField","prismTiles","radialFan","bubbleBloom"]);
+    if(/retro|vintage|memphis|playful|color block/.test(n)) return choose(["capsuleGrid","blockWave","mosaicSteps","prismTiles"]);
+    if(/dot|polka|grid|checkerboard|line|wave|spiral|seamless|halftone/.test(n)) return choose(["capsuleGrid","mosaicSteps","ringCluster","blockWave"]);
+    if(/minimal/.test(n)) return choose(["archStack","mosaicSteps","blockWave"]);
+    if(/geometry|geometric|layers|collage|shapes|editorial|luxury|fashion|art deco|art nouveau|moroccan|islamic|classic/.test(n)) return choose(["prismTiles","blockWave","archStack","capsuleGrid","radialFan"]);
+    return choose(["gradientField","blockWave","orbitTiles","prismTiles","pebbleScatter","ringCluster"]);
+  }
+
+  const DESIGN_MODE_META = Object.fromEntries(DESIGN_MODE_NAMES.map((name,i)=>{
+    const value=DESIGN_MODE_VALUES[i];
+    return [value, {name, family:familyForMode(name), hash:hashText(name)}];
+  }));
+
   const PRESETS = {
     studio: { theme:"crimson", mode:"blockWave", composition:"diagonal", density:8, shapeSize:100, spacing:24, rotation:18, roundness:48, variation:52, gradientType:"linear", gradientAngle:35, gradientStrength:76, colorMix:68, depth:"flat" },
     sunset: { theme:"sunset", mode:"gradientField", composition:"center", density:7, shapeSize:120, spacing:16, rotation:28, roundness:60, variation:42, gradientType:"radial", gradientAngle:80, gradientStrength:90, colorMix:76, depth:"offset" },
@@ -80,9 +260,10 @@
     const theme=THEMES[state.theme] || THEMES.crimson;
     const rotate=state.alternatePalette ? index : 0;
     const shift=(rotate%3)*.14;
-    const a=mixHex(state.colorA,theme.a,shift);
-    const b=mixHex(state.colorB,theme.b,shift);
-    const c=mixHex(state.colorC,theme.c,shift);
+    const mix=Number(state.colorMix)/100;
+    const a=mixHex(state.colorA,theme.a,shift*mix);
+    const b=mixHex(state.colorB,theme.b,Math.min(1,shift*mix+0.08*mix));
+    const c=mixHex(state.colorC,theme.c,Math.min(1,shift*mix+0.12*mix));
     const d=theme.d;
     return {
       bg:theme.bg,
@@ -319,7 +500,8 @@
   }
 
   function layout(id,w,h,p,rnd,index){
-    switch(state.designMode){
+    const meta=DESIGN_MODE_META[state.designMode] || DESIGN_MODE_META[DESIGN_MODE_VALUES[0]];
+    switch(meta.family){
       case "blockWave": return blockWave(id,w,h,p,rnd,index);
       case "bubbleBloom": return bubbleBloom(id,w,h,p,rnd,index);
       case "orbitTiles": return orbitTiles(id,w,h,p,rnd,index);
@@ -349,12 +531,15 @@
 
   function makeSvg(index){
     const {w,h}=dims();
-    const rnd=rndSeed((Number(state.seed)||1)+index*9719);
+    const meta=DESIGN_MODE_META[state.designMode] || DESIGN_MODE_META[DESIGN_MODE_VALUES[0]];
+    const rnd=rndSeed((Number(state.seed)||1)+index*9719+(meta.hash%100000)*37);
     const p=palette(index);
-    const id=`ali_${Number(state.seed)||1}_${index}`;
+    const id=`ali_${Number(state.seed)||1}_${meta.hash}_${index}`;
     let out=defs(id,p,rnd);
     out+=background(id,w,h,p);
-    out+=layout(id,w,h,p,rnd,index);
+    const margin=Math.min(Number(state.edgeMargin)||0,22)/100;
+    const sx=1-margin*1.35, sy=1-margin*1.35, tx=w*margin*.68, ty=h*margin*.68;
+    out+=`<g transform="translate(${tx.toFixed(1)} ${ty.toFixed(1)}) scale(${sx.toFixed(4)} ${sy.toFixed(4)})">`+layout(id,w,h,p,rnd,index)+`</g>`;
     out+=textLayer(index,w,h,p);
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><title>ALI STUDIO — ${esc(THEMES[state.theme]?.name||state.theme)} — Design ${String(index+1).padStart(2,"0")}</title><metadata>Generated locally by ALI STUDIO. Shape fills and SVG gradients only.</metadata>${out}</svg>`;
   }
@@ -378,6 +563,35 @@
   async function copyText(text){
     try{await navigator.clipboard.writeText(text); alert("SVG copied to clipboard.");}
     catch{const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();alert("SVG copied to clipboard.");}
+  }
+
+  function populateDesignModes(){
+    const sel=$("designMode"); if(!sel) return;
+    const current=state.designMode;
+    sel.innerHTML="";
+    const groups=[
+      ["Editorial", DESIGN_MODE_NAMES.filter(n=>/Editorial/.test(n))],
+      ["Geometry", DESIGN_MODE_NAMES.filter(n=>/Geometry|Geometric|Shapes|Layers|Collage/.test(n) && !/Editorial/.test(n))],
+      ["Abstract & Fluid", DESIGN_MODE_NAMES.filter(n=>/Abstract|Liquid|Fluid|Ink|Paint|Marble|Stone|Splash|Brush/.test(n) && !/Editorial/.test(n))],
+      ["Bubbles", DESIGN_MODE_NAMES.filter(n=>/Bubble/.test(n))],
+      ["Pastel / Retro / Memphis", DESIGN_MODE_NAMES.filter(n=>/Pastel|Retro|Vintage|Memphis|Playful|Color Block/.test(n))],
+      ["Gradient / Digital", DESIGN_MODE_NAMES.filter(n=>/Gradient|Iridescent|Chromatic|Prismatic|Holographic|Neon|Vaporwave|Synthwave|Cyber|Digital|Futuristic|Tech|Y2K/.test(n))],
+      ["Organic / Nature", DESIGN_MODE_NAMES.filter(n=>/Organic|Botanical|Floral|Leaf|Tropical|Nature|Petal|Biomorphic/.test(n) && !/Pastel/.test(n))],
+      ["Patterns / Ornaments", DESIGN_MODE_NAMES.filter(n=>/Pattern|Mandala|Sacred|Kaleidoscope|Radial|Circular|Concentric|Ornamental|Decorative|Symmetrical|Moroccan|Islamic|Art Deco|Art Nouveau|Classic Ornament/.test(n))],
+      ["Modern / Minimal", DESIGN_MODE_NAMES.filter(n=>/Minimal|Modern|Luxury|Fashion|Bold|Contemporary|Experimental|Natural|Soft|Dreamy/.test(n) && !/Editorial|Pastel|Memphis/.test(n))],
+      ["Retro-Tech", DESIGN_MODE_NAMES.filter(n=>/Halftone|Dot|Polka|Grid|Checkerboard|Line Pattern|Wave Pattern|Spiral|Seamless|Abstract Pattern/.test(n))]
+    ];
+    const seen=new Set();
+    groups.forEach(([label,names])=>{
+      const unique=names.filter(n=>!seen.has(n));
+      if(!unique.length) return;
+      unique.forEach(n=>seen.add(n));
+      const og=document.createElement("optgroup"); og.label=label;
+      unique.forEach(n=>{ const o=document.createElement("option"); o.value=DESIGN_MODE_VALUES[DESIGN_MODE_NAMES.indexOf(n)]; o.textContent=n; og.appendChild(o); });
+      sel.appendChild(og);
+    });
+    DESIGN_MODE_NAMES.forEach(n=>{ if(seen.has(n)) return; const o=document.createElement("option"); o.value=DESIGN_MODE_VALUES[DESIGN_MODE_NAMES.indexOf(n)]; o.textContent=n; sel.appendChild(o); });
+    sel.value=current && DESIGN_MODE_LOOKUP[current] ? current : DESIGN_MODE_VALUES[0];
   }
 
   function syncThemeColors(force=true){
