@@ -3,250 +3,583 @@
 
   const $ = id => document.getElementById(id);
   const TAU = Math.PI * 2;
-  const clamp = (n,a,b) => Math.max(a, Math.min(b,n));
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&apos;"}[c]));
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':'&quot;',"'":"&apos;"}[c]));
 
   const THEMES = {
-    cyan:   { name:"Cyan Editorial", bg:"#070b13", a:"#21d4ff", b:"#5861ff", c:"#ff5b6e", d:"#161327" },
-    magenta:{ name:"Magenta Editorial", bg:"#10070f", a:"#ff3cac", b:"#7b4dff", c:"#ff8f70", d:"#240d24" },
-    sunset: { name:"Sunset Editorial", bg:"#160a0b", a:"#ff6a3d", b:"#ff2f75", c:"#ffcf69", d:"#351117" },
-    aqua:   { name:"Aqua Editorial", bg:"#061316", a:"#20e6e8", b:"#398bff", c:"#7dfff0", d:"#0e2736" },
-    violet: { name:"Violet Editorial", bg:"#0d081a", a:"#8e5bff", b:"#ef4cff", c:"#ff91c8", d:"#221338" },
-    pastel: { name:"Pastel Editorial", bg:"#151216", a:"#ff8cb8", b:"#8d8bff", c:"#ffcf9d", d:"#30202d" },
-    lime:   { name:"Lime Editorial", bg:"#081305", a:"#b5f34a", b:"#38d5a0", c:"#d7ff8a", d:"#18310e" },
-    mono:   { name:"Monochrome Editorial", bg:"#090a0d", a:"#dcdfe8", b:"#7d8291", c:"#ffffff", d:"#24262e" }
+    crimson: { name:"Crimson / Cream", bg:"#17080b", a:"#ff3154", b:"#8f0d2d", c:"#ffe4d6", d:"#420819" },
+    sunset: { name:"Sunset Punch", bg:"#361006", a:"#ff7142", b:"#f02f62", c:"#ffd669", d:"#7e230c" },
+    electric: { name:"Electric Blue", bg:"#07152b", a:"#1d73ff", b:"#5f46ff", c:"#96ecff", d:"#082f62" },
+    tropical: { name:"Tropical Mint", bg:"#052b26", a:"#19cda1", b:"#2e9bf4", c:"#e3ffbe", d:"#0b6557" },
+    berry: { name:"Berry Violet", bg:"#270619", a:"#ea3d9c", b:"#733dff", c:"#ffb5db", d:"#4a0c42" },
+    aqua: { name:"Aqua Sky", bg:"#05262d", a:"#16dbe8", b:"#4780ff", c:"#d3fff8", d:"#0b6373" },
+    solar: { name:"Solar Orange", bg:"#3a1404", a:"#ff922e", b:"#ff4a35", c:"#ffe99d", d:"#913208" },
+    pastel: { name:"Pastel Candy", bg:"#47302b", a:"#ff77a9", b:"#ff9b6f", c:"#ffe5a9", d:"#c45a7e" },
+    lime: { name:"Lime Fusion", bg:"#142006", a:"#95df28", b:"#35c782", c:"#ecff99", d:"#396809" },
+    mono: { name:"Monochrome", bg:"#101116", a:"#eeeeef", b:"#727681", c:"#ffffff", d:"#2e313a" }
+  };
+
+  const PRESETS = {
+    studio: { theme:"crimson", mode:"blockWave", composition:"diagonal", density:8, shapeSize:100, spacing:24, rotation:18, roundness:48, variation:52, gradientType:"linear", gradientAngle:35, gradientStrength:76, colorMix:68, depth:"flat" },
+    sunset: { theme:"sunset", mode:"gradientField", composition:"center", density:7, shapeSize:120, spacing:16, rotation:28, roundness:60, variation:42, gradientType:"radial", gradientAngle:80, gradientStrength:90, colorMix:76, depth:"offset" },
+    electric: { theme:"electric", mode:"prismTiles", composition:"grid", density:12, shapeSize:95, spacing:14, rotation:42, roundness:16, variation:70, gradientType:"mixed", gradientAngle:120, gradientStrength:84, colorMix:62, depth:"flat" },
+    pastel: { theme:"pastel", mode:"bubbleBloom", composition:"scatter", density:8, shapeSize:112, spacing:30, rotation:12, roundness:75, variation:48, gradientType:"radial", gradientAngle:210, gradientStrength:65, colorMix:74, depth:"flat" },
+    mono: { theme:"mono", mode:"ringCluster", composition:"center", density:11, shapeSize:106, spacing:19, rotation:24, roundness:35, variation:32, gradientType:"linear", gradientAngle:25, gradientStrength:70, colorMix:34, depth:"offset" },
+    lime: { theme:"lime", mode:"cornerBlocks", composition:"corners", density:7, shapeSize:125, spacing:12, rotation:32, roundness:22, variation:58, gradientType:"linear", gradientAngle:145, gradientStrength:78, colorMix:72, depth:"flat" }
   };
 
   const state = {
-    posterCount:5, designMode:"gradientEditorial", composition:"auto", theme:"cyan",
-    shapeSize:105, density:8, spacing:22, rotation:18, roundness:62, variation:58,
-    gradientType:"mixed", gradientAngle:35, gradientStrength:90, colorMix:72,
-    depth:"flat", depthOffset:18, edgeMargin:7, backgroundGradient:false, alternatePalette:true,
-    format:"portrait", quality:"large", showText:true,
-    titleText:"GRADIENT", subtitleText:"EDITORIAL DESIGN", textAmount:82,
-    seed:260903, colorA:"#21d4ff", colorB:"#5861ff", colorC:"#ff5b6e"
+    posterCount:5, designMode:"blockWave", composition:"auto", theme:"crimson",
+    depth:"flat", shapeSize:100, density:8, spacing:24, rotation:18, roundness:48,
+    variation:52, gradientType:"linear", gradientAngle:35, gradientStrength:76, colorMix:68,
+    depthOffset:18, edgeMargin:8, backgroundGradient:true, alternatePalette:true,
+    format:"portrait", quality:"large", showText:true, titleText:"COLOR / FORM", subtitleText:"GENERATIVE STUDY", textAmount:82,
+    seed:260902, colorA:"#ff3154", colorB:"#8f0d2d", colorC:"#ffe4d6"
   };
 
-  let generated = [], zoom = 1;
+  let generated = [];
+  let zoom = 1;
 
   function dims(){
-    const base={portrait:{w:1200,h:1800},square:{w:1600,h:1600},landscape:{w:1800,h:1200}}[state.format];
-    const q={standard:1,large:1.35,xl:1.8}[state.quality];
+    const base = {portrait:{w:1200,h:1800},square:{w:1600,h:1600},landscape:{w:1800,h:1200}}[state.format];
+    const q = {standard:1,large:1.35,xl:1.8}[state.quality];
     return {w:Math.round(base.w*q),h:Math.round(base.h*q)};
   }
+
   function hexToRgb(hex){
-    const s=String(hex||"").replace("#",""); const clean=s.length===3?s.split("").map(x=>x+x).join(""):s; const v=parseInt(clean,16)||0;
+    const s = String(hex).replace("#","");
+    const clean = s.length === 3 ? s.split("").map(x=>x+x).join("") : s;
+    const v = parseInt(clean,16) || 0;
     return {r:(v>>16)&255,g:(v>>8)&255,b:v&255};
   }
-  function rgbToHex(r,g,b){return "#"+[r,g,b].map(v=>clamp(Math.round(v),0,255).toString(16).padStart(2,"0")).join("");}
-  function mixHex(a,b,t){const A=hexToRgb(a),B=hexToRgb(b);return rgbToHex(A.r+(B.r-A.r)*t,A.g+(B.g-A.g)*t,A.b+(B.b-A.b)*t);}
-  function hashString(str){let h=2166136261>>>0;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
-  function rng(seed){let a=(seed>>>0)||1;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
-  function sizeFactor(){return clamp(Number(state.shapeSize)/100,.35,1.75);}
-  function norm(deg){return ((deg%360)+360)%360;}
-
-  function palette(index,rnd){
-    const t=THEMES[state.theme]||THEMES.cyan;
-    const drift=state.alternatePalette?((index%5)*.11):0;
-    const mix=Number(state.colorMix)/100;
-    const a=mixHex(state.colorA||t.a,t.a,drift*.55+(.15*(1-mix)));
-    const b=mixHex(state.colorB||t.b,t.b,drift*.42+(.12*(1-mix)));
-    const c=mixHex(state.colorC||t.c,t.c,drift*.35);
-    const phase=rnd();
-    return {bg:t.bg,a,b,c,d:t.d,hi:mixHex(c,"#ffffff",.18+phase*.12),dark:mixHex(t.bg,b,.35)};
+  function rgbToHex(r,g,b){ return "#"+[r,g,b].map(v=>clamp(Math.round(v),0,255).toString(16).padStart(2,"0")).join(""); }
+  function mixHex(a,b,t){
+    const A=hexToRgb(a), B=hexToRgb(b);
+    return rgbToHex(A.r+(B.r-A.r)*t,A.g+(B.g-A.g)*t,A.b+(B.b-A.b)*t);
   }
-
-  function addGradient(defs,id,kind,p,angle=state.gradientAngle,shift=0){
-    const strength=Number(state.gradientStrength)/100;
-    if(kind==="radial"){
-      const outer=mixHex(p.b,p.dark,Math.max(0,.35-strength*.35));
-      defs.push(`<radialGradient id="${id}" cx="35%" cy="32%" r="78%"><stop offset="0%" stop-color="${p.hi}"/><stop offset="${Math.round(20+strength*35)}%" stop-color="${p.a}"/><stop offset="72%" stop-color="${p.b}"/><stop offset="100%" stop-color="${outer}"/></radialGradient>`);
-      return `url(#${id})`;
-    }
-    const rad=norm(Number(angle)+shift)*Math.PI/180, dx=Math.cos(rad)*50, dy=Math.sin(rad)*50;
-    defs.push(`<linearGradient id="${id}" x1="${(50-dx).toFixed(2)}%" y1="${(50-dy).toFixed(2)}%" x2="${(50+dx).toFixed(2)}%" y2="${(50+dy).toFixed(2)}%"><stop offset="0%" stop-color="${p.b}"/><stop offset="${Math.round(30+strength*28)}%" stop-color="${p.a}"/><stop offset="${Math.round(68+strength*22)}%" stop-color="${p.c}"/><stop offset="100%" stop-color="${p.hi}"/></linearGradient>`);
-    return `url(#${id})`;
+  function rgba(hex, alpha){ const c=hexToRgb(hex); return `rgb(${c.r} ${c.g} ${c.b} / ${clamp(alpha,0,1)})`; }
+  function normalizeAngle(deg){ return ((deg%360)+360)%360; }
+  function sizeFactor(){ return clamp(Number(state.shapeSize)/100,.35,1.7); }
+  function gradientMix(){ return Number(state.gradientStrength)/100; }
+  function rndSeed(seed){
+    let a = (seed >>> 0) || 1;
+    return () => {
+      a += 0x6D2B79F5;
+      let t=a;
+      t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61);
+      return ((t^t>>>14)>>>0)/4294967296;
+    };
   }
-  function makeDefs(id,p,rnd){
-    const defs=[];
-    const primary=addGradient(defs,id+"_g1",state.gradientType==="radial"?"radial":"linear",p,state.gradientAngle,0);
-    const secondary=addGradient(defs,id+"_g2",state.gradientType==="linear"?"linear":"radial",p,state.gradientAngle+90,35);
-    const third=addGradient(defs,id+"_g3","linear",{...p,a:p.b,b:p.c,c:p.a,hi:p.hi,d:p.d},state.gradientAngle+180,-25);
-    return {defs:defs.join(""),primary,secondary,third};
-  }
-
-  const rect=(x,y,w,h,fill,rx=0,rot=0,cx=x+w/2,cy=y+h/2)=>`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${rx.toFixed(1)}" fill="${fill}"${rot?` transform="rotate(${rot.toFixed(2)} ${cx.toFixed(1)} ${cy.toFixed(1)})"`:""}/>`;
-  const circle=(cx,cy,r,fill)=>`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${fill}"/>`;
-  const ellipse=(cx,cy,rx,ry,fill,rot=0)=>`<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" fill="${fill}"${rot?` transform="rotate(${rot.toFixed(2)} ${cx.toFixed(1)} ${cy.toFixed(1)})"`:""}/>`;
-  const polygon=(pts,fill)=>`<polygon points="${pts.map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ")}" fill="${fill}"/>`;
-
-  function fillFor(g,rnd,kind="primary"){
-    if(state.gradientType==="solid") return [state.colorA,state.colorB,state.colorC][Math.floor(rnd()*3)];
-    if(kind==="secondary") return g.secondary;
-    if(kind==="third") return g.third;
-    if(kind==="radial") return g.secondary;
-    if(state.gradientType==="mixed" && rnd()>.55) return g.secondary;
-    return g.primary;
-  }
-
-  function offsetShape(html, dx, dy){
-    if(state.depth!=="offset" || Number(state.depthOffset)<=0) return html;
-    return html.replace(/^<([a-z]+)(\s+)/, (_,tag,space)=>`<${tag}${space}transform="translate(${dx.toFixed(1)} ${dy.toFixed(1)})" `).replace(/\/>$/,`/>`);
-  }
-
-  function variantName(index){ return ["ORBITAL BLOOM","DIAGONAL RIBBON","SOFT OVERLAP","EDITORIAL ORBIT","MODULAR GRADIENT"][index%5]; }
-  function compositionFor(index,rnd){
+  function randomInt(rnd,a,b){ return Math.floor(a+rnd()*(b-a+1)); }
+  function selectedComposition(index,rnd){
     if(state.composition!=="auto") return state.composition;
-    return ["center","diagonal","scatter","corners","grid"][index%5];
+    return ["center","diagonal","corners","grid","scatter"][index%5];
   }
 
-  function renderOrbital(w,h,p,g,rnd,index){
-    let out=""; const s=sizeFactor(), m=Number(state.edgeMargin)/100, base=Math.min(w,h);
-    const cx=w*(.34+rnd()*.10), cy=h*(.28+rnd()*.13); const rx=base*(.24+.06*rnd())*s, ry=base*(.17+.05*rnd())*s;
-    const rot=-12-rnd()*Number(state.rotation)*.6;
-    out+=ellipse(cx+state.depthOffset,cy+state.depthOffset,rx,ry,p.dark,rot).replace(state.depth==="offset"?"":p.dark,p.dark);
-    if(state.depth!=="offset") out=out.replace(`<ellipse cx="${(cx+state.depthOffset).toFixed(1)}" cy="${(cy+state.depthOffset).toFixed(1)}" rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" fill="${p.dark}" transform="rotate(${rot.toFixed(2)} ${(cx+state.depthOffset).toFixed(1)} ${(cy+state.depthOffset).toFixed(1)})"/>`,"");
-    out+=ellipse(cx,cy,rx,ry,fillFor(g,rnd,"primary"),rot);
-    const cx2=w*(.70+rnd()*.12), cy2=h*(.77+rnd()*.08), rx2=base*(.16+.05*rnd())*s, ry2=base*(.12+.04*rnd())*s;
-    if(state.depth==="offset") out+=ellipse(cx2+state.depthOffset,cy2+state.depthOffset,rx2,ry2,p.dark,rot+8);
-    out+=ellipse(cx2,cy2,rx2,ry2,fillFor(g,rnd,"secondary"),rot+8);
-    const cx3=w*(.14+rnd()*.12), cy3=h*(.56+rnd()*.10), r3=base*(.07+.035*rnd())*s;
-    if(state.depth==="offset") out+=circle(cx3+state.depthOffset,cy3+state.depthOffset,r3,p.dark);
-    out+=circle(cx3,cy3,r3,fillFor(g,rnd,"third"));
-    if(state.roundness>55) out+=ellipse(cx,cy-h*.015,rx*.30,ry*.16,g.third,rot-10);
-    return out;
+  function palette(index){
+    const theme=THEMES[state.theme] || THEMES.crimson;
+    const rotate=state.alternatePalette ? index : 0;
+    const shift=(rotate%3)*.14;
+    const a=mixHex(state.colorA,theme.a,shift);
+    const b=mixHex(state.colorB,theme.b,shift);
+    const c=mixHex(state.colorC,theme.c,shift);
+    const d=theme.d;
+    return {
+      bg:theme.bg,
+      a,b,c,d,
+      a2:mixHex(a,c,.34),
+      b2:mixHex(b,c,.28),
+      dark:mixHex(theme.bg,b,.42)
+    };
   }
 
-  function renderDiagonal(w,h,p,g,rnd,index){
-    let out=""; const s=sizeFactor(), count=5+Math.floor(Number(state.density)/2); const m=Number(state.edgeMargin)/100;
-    const barW=w*(.10+.07*s), startX=-w*.24, gap=Number(state.spacing)/100*w*.045;
-    for(let i=0;i<count;i++){
-      const x=startX+i*(barW+gap), y=h*(.18+i*.045)+rnd()*h*.06;
-      const ww=barW*(.62+rnd()*.75), hh=h*(.88+rnd()*.24)*s, rot=-22-rnd()*Number(state.rotation)*.5;
-      const f=fillFor(g,rnd,i%3===0?"secondary":"primary");
-      if(state.depth==="offset") out+=rect(x+state.depthOffset,y+state.depthOffset,ww,hh,p.dark,Math.min(ww,hh)*state.roundness/160,rot,x+ww/2+state.depthOffset,y+hh/2+state.depthOffset);
-      out+=rect(x,y,ww,hh,f,Math.min(ww,hh)*state.roundness/160,rot,x+ww/2,y+hh/2);
+  function gradientDef(id, kind, x1,y1,x2,y2, p){
+    if(kind==="radial"){
+      return `<radialGradient id="${id}" cx="50%" cy="42%" r="72%"><stop offset="0%" stop-color="${p.c}"/><stop offset="42%" stop-color="${p.a}"/><stop offset="100%" stop-color="${p.b}"/></radialGradient>`;
     }
-    const labelW=w*.42, labelH=h*.10, lx=w*.54, ly=h*.14;
-    out+=rect(lx,ly,labelW,labelH,p.dark,labelH*.16,0,lx+labelW/2,ly+labelH/2);
-    out+=rect(lx+labelW*.08,ly+labelH*.16,labelW*.84,labelH*.68,fillFor(g,rnd,"third"),labelH*.12);
-    return out;
+    return `<linearGradient id="${id}" x1="${x1}%" y1="${y1}%" x2="${x2}%" y2="${y2}%"><stop offset="0%" stop-color="${p.b}"/><stop offset="${Math.round(35 + gradientMix()*30)}%" stop-color="${p.a}"/><stop offset="100%" stop-color="${p.c}"/></linearGradient>`;
+  }
+  function defs(id,p,rnd){
+    const a=normalizeAngle(state.gradientAngle)*Math.PI/180;
+    const dx=Math.cos(a)*50, dy=Math.sin(a)*50;
+    const x1=50-dx, y1=50-dy, x2=50+dx, y2=50+dy;
+    const mixed=gradientDef(`${id}_lin` ,"linear",x1,y1,x2,y2,p);
+    const radial=gradientDef(`${id}_rad`,"radial",0,0,0,0,p);
+    const second=gradientDef(`${id}_alt`,"linear",x2,y2,x1,y1,{...p,a:p.a2,b:p.b2,c:p.c,d:p.d});
+    return `<defs>${mixed}${radial}${second}</defs>`;
   }
 
-  function renderSoftOverlap(w,h,p,g,rnd,index){
-    let out=""; const s=sizeFactor(), base=Math.min(w,h), centerX=w*(.50+(rnd()-.5)*.06), centerY=h*(.52+(rnd()-.5)*.06);
-    const pieces=5+Math.floor(Number(state.density)/3);
-    for(let i=0;i<pieces;i++){
-      const a=i*TAU/pieces+(rnd()-.5)*.3, r=base*(.16+.04*rnd())*s;
-      const x=centerX+Math.cos(a)*base*.22, y=centerY+Math.sin(a)*base*.27;
-      const rx=r*(.75+rnd()*.55), ry=r*(.42+rnd()*.45), rot=norm(a*180/Math.PI-20+Number(state.rotation)*(rnd()-.5));
-      const f=fillFor(g,rnd,i%2?"secondary":"primary");
-      if(state.depth==="offset") out+=ellipse(x+state.depthOffset,y+state.depthOffset,rx,ry,p.dark,rot);
-      out+=ellipse(x,y,rx,ry,f,rot);
-    }
-    out+=circle(centerX,centerY,base*.11*s,p.c);
-    return out;
+  function fill(id, type, p, rnd){
+    if(state.gradientType==="solid") return [p.a,p.b,p.c,p.d][randomInt(rnd,0,3)];
+    if(type==="radial") return `url(#${id}_rad)`;
+    if(type==="alt") return `url(#${id}_alt)`;
+    if(state.gradientType==="mixed" && rnd()>.48) return `url(#${id}_rad)`;
+    return `url(#${id}_lin)`;
   }
 
-  function renderOrbit(w,h,p,g,rnd,index){
-    let out=""; const s=sizeFactor(), base=Math.min(w,h), cx=w*(.53+rnd()*.06), cy=h*(.47+rnd()*.06);
-    const big=base*.24*s;
-    if(state.depth==="offset") out+=circle(cx+state.depthOffset,cy+state.depthOffset,big*.72,p.dark);
-    out+=circle(cx,cy,big*.72,fillFor(g,rnd,"primary"));
-    const count=5+Math.floor(Number(state.density)/2);
-    for(let i=0;i<count;i++){
-      const a=i*TAU/count+state.rotation*Math.PI/180, rr=big*(1.08+rnd()*.35), x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr;
-      const ew=base*(.07+.04*rnd())*s, eh=base*(.11+.05*rnd())*s;
-      if(state.depth==="offset") out+=ellipse(x+state.depthOffset,y+state.depthOffset,ew,eh,p.dark,a*180/Math.PI+25);
-      out+=ellipse(x,y,ew,eh,fillFor(g,rnd,i%3?"secondary":"third"),a*180/Math.PI+25);
-    }
-    out+=ellipse(cx-big*.28,cy-big*.28,big*.22,big*.10,g.third,-22);
-    return out;
-  }
+  function rxFor(w, base){ return clamp(base*state.roundness/100,0,base); }
 
-  function renderModular(w,h,p,g,rnd,index){
-    let out=""; const cols=4, rows=7, gap=Number(state.spacing)/100, s=sizeFactor();
-    const cellW=w/(cols+1), cellH=h/(rows+1);
-    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-      if(rnd() < clamp(.18-gap*.35,0,.25)) continue;
-      const x=cellW*(c+1), y=cellH*(r+1), ww=cellW*(.56+rnd()*.50)*s, hh=cellH*(.34+rnd()*.62)*s;
-      const rot=(rnd()-.5)*Number(state.rotation)*1.2, rx=Math.min(ww,hh)*Number(state.roundness)/180;
-      const f=fillFor(g,rnd,(r+c)%4===0?"third":"primary");
-      if(state.depth==="offset") out+=rect(x-ww/2+state.depthOffset,y-hh/2+state.depthOffset,ww,hh,p.dark,rx,rot,x+state.depthOffset,y+state.depthOffset);
-      out+=rect(x-ww/2,y-hh/2,ww,hh,f,rx,rot,x,y);
-    }
-    const bandY=h*.74, bandH=h*.10;
-    out+=rect(w*.12,bandY,w*.76,bandH,p.dark,bandH*.16);
-    out+=rect(w*.18,bandY+bandH*.19,w*.64,bandH*.62,g.third,bandH*.10);
-    return out;
+  function rect(x,y,w,h,fillValue,rx=0,rot=0,cx=x+w/2,cy=y+h/2){
+    const r=rot ? ` transform="rotate(${rot.toFixed(2)} ${cx.toFixed(1)} ${cy.toFixed(1)})"` : "";
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${rx.toFixed(1)}" fill="${fillValue}"${r}/>`;
   }
+  function circle(cx,cy,r,fillValue){ return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${fillValue}"/>`; }
+  function ellipse(cx,cy,rx,ry,fillValue,rot=0){ return `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}" fill="${fillValue}"${rot?` transform="rotate(${rot.toFixed(2)} ${cx.toFixed(1)} ${cy.toFixed(1)})"`:""}/>`; }
+  function polygon(points,fillValue){ return `<polygon points="${points.map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ")}" fill="${fillValue}"/>`; }
 
-  function renderVariant(w,h,p,g,rnd,index){
-    const variants=[renderOrbital,renderDiagonal,renderSoftOverlap,renderOrbit,renderModular];
-    return variants[index%variants.length](w,h,p,g,rnd,index);
-  }
-
-  function background(w,h,p,g){
-    if(state.backgroundGradient && state.gradientType!=="solid") return `<rect width="${w}" height="${h}" fill="${g.primary}"/>`;
+  function background(id,w,h,p){
+    if(state.backgroundGradient && state.gradientType!=="solid") return `<rect width="${w}" height="${h}" fill="${state.gradientType==="radial"?`url(#${id}_rad)`: `url(#${id}_lin)`}"/>`;
     return `<rect width="${w}" height="${h}" fill="${p.bg}"/>`;
   }
 
-  function textLayer(w,h,p,index){
+  function shadowLayer(shapeFn){
+    if(state.depth!=="offset" || Number(state.depthOffset)<=0) return "";
+    return shapeFn(state.depthOffset,state.depthOffset,true);
+  }
+
+  function blockWave(id,w,h,p,rnd,index){
+    let out=""; const s=sizeFactor(), d=Number(state.density), bias=selectedComposition(index,rnd);
+    const count=Math.max(5,d);
+    const gap=Number(state.spacing)/100;
+    const baseW=w*(.14+.10*(1-gap))*s;
+    const baseH=h*(.10+.035*(1-gap))*s;
+    const cols=Math.max(4,Math.ceil(count/2));
+    for(let i=0;i<count;i++){
+      let x=w*(.10 + (i/(Math.max(1,count-1)))*.80);
+      let y=h*(.18 + (i%2)*.44 + (rnd()-.5)*.10);
+      if(bias==="center") { x += (w*.5-x)*.18; y += (h*.5-y)*.18; }
+      if(bias==="diagonal") y += (x/w-.5)*h*.28;
+      if(bias==="corners") x = i%2 ? w*.72 : w*.20;
+      const ww=baseW*(.78+rnd()*(.56+state.variation/120));
+      const hh=baseH*(.82+rnd()*(.42+state.variation/140));
+      const rot=(rnd()-.5)*Number(state.rotation)*1.7;
+      const rx=rxFor(Math.min(ww,hh), Math.min(ww,hh)*.50);
+      const f=fill(id,i%2?"alt":"linear",p,rnd);
+      const sh=shadowLayer((ox,oy)=>rect(x+ox-ww/2,y+oy-hh/2,ww,hh, p.d, rx, rot,x+ox,y+oy));
+      out+=sh+rect(x-ww/2,y-hh/2,ww,hh,f,rx,rot,x,y);
+    }
+    if(bias==="grid"){
+      const side=Math.min(w,h)*.36*s;
+      out += rect(w*.5-side/2,h*.5-side/2,side,side,fill(id,"radial",p,rnd),side*.12,0,w*.5,h*.5);
+    }
+    return out;
+  }
+
+  function bubbleBloom(id,w,h,p,rnd,index){
+    let out=""; const s=sizeFactor(), count=Math.max(6,Math.floor(Number(state.density)*.85)), bias=selectedComposition(index,rnd);
+    for(let i=0;i<count;i++){
+      let cx=w*(.10+rnd()*.80), cy=h*(.12+rnd()*.76);
+      if(bias==="center"){cx=w*(.28+rnd()*.44); cy=h*(.23+rnd()*.54)}
+      if(bias==="corners"){cx=i%2?w*(.70+rnd()*.18):w*(.08+rnd()*.18); cy=i%2?h*(.68+rnd()*.18):h*(.08+rnd()*.18)}
+      const r=Math.min(w,h)*(.055+rnd()*.12)*s*(.82+state.variation/180);
+      const f=fill(id,i%3===0?"radial":"linear",p,rnd);
+      if(state.depth==="offset") out+=circle(cx+Number(state.depthOffset),cy+Number(state.depthOffset),r,p.d);
+      out+=circle(cx,cy,r,f);
+      if(state.roundness>65 && r>26) out+=circle(cx-r*.28,cy-r*.30,r*.18,p.c);
+    }
+    return out;
+  }
+
+  function orbitTiles(id,w,h,p,rnd,index){
+    let out=""; const s=sizeFactor(), n=Math.max(6,Number(state.density)), cx=w*(.5+(rnd()-.5)*.06), cy=h*(.50+(rnd()-.5)*.08), radius=Math.min(w,h)*.28*s;
+    for(let i=0;i<n;i++){
+      const a=i*TAU/n + (rnd()-.5)*.2;
+      const rr=radius*(.68+rnd()*.42);
+      const x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr;
+      const size=Math.min(w,h)*(.06+rnd()*.045)*s;
+      const f=fill(id,i%2?"alt":"linear",p,rnd);
+      const sh=shadowLayer((ox,oy)=>{ const pts=[[x-size+ox,y-size+oy],[x+size+ox,y-size+oy],[x+size+ox,y+size+oy],[x-size+ox,y+size+oy]]; return polygon(pts,p.d); });
+      out+=sh+rect(x-size,y-size,size*2,size*2,f,size*.12,(a*180/Math.PI)+Number(state.rotation),x,y);
+    }
+    out+=circle(cx,cy,radius*.42,fill(id,"radial",p,rnd));
+    return out;
+  }
+
+  function archStack(id,w,h,p,rnd){
+    let out=""; const layers=Math.max(5,Math.floor(Number(state.density)*.7)), s=sizeFactor();
+    const centerX=w*(.50+(rnd()-.5)*.08), baseY=h*.80;
+    for(let i=0;i<layers;i++){
+      const ww=w*(.30+i*(.10+Number(state.spacing)/1000))*s;
+      const hh=h*(.16+i*.045)*s;
+      const rx=ww*.50;
+      const y=baseY-hh;
+      const f=fill(id,i%2?"radial":"linear",p,rnd);
+      if(state.depth==="offset") out+=rect(centerX-ww/2+Number(state.depthOffset),y+Number(state.depthOffset),ww,hh,p.d,rx,0,centerX+Number(state.depthOffset),y+hh/2+Number(state.depthOffset));
+      out+=rect(centerX-ww/2,y,ww,hh,f,rx);
+    }
+    return out;
+  }
+
+  function capsuleGrid(id,w,h,p,rnd){
+    let out=""; const cols=Math.max(3,Math.min(6,Math.floor(Number(state.density)/2))), rows=Math.max(3,Math.min(8,Math.floor(Number(state.density)*.65))), s=sizeFactor();
+    const cellW=w/(cols+1), cellH=h/(rows+1);
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      const x=cellW*(c+1), y=cellH*(r+1), ww=cellW*(.56+state.variation/250)*s, hh=cellH*(.45+state.variation/300)*s;
+      const rot=(rnd()-.5)*Number(state.rotation);
+      const f=fill(id,(r+c)%3===0?"radial":"linear",p,rnd);
+      if(state.depth==="offset") out+=rect(x-ww/2+state.depthOffset,y-hh/2+state.depthOffset,ww,hh,p.d,Math.min(ww,hh)/2,rot,x+state.depthOffset,y+state.depthOffset);
+      out+=rect(x-ww/2,y-hh/2,ww,hh,f,Math.min(ww,hh)/2,rot,x,y);
+    }
+    return out;
+  }
+
+  function prismTiles(id,w,h,p,rnd){
+    let out=""; const n=Math.max(5,Math.floor(Number(state.density)*.8)), s=sizeFactor();
+    for(let i=0;i<n;i++){
+      const cx=w*(.12+rnd()*.76), cy=h*(.12+rnd()*.76), r=Math.min(w,h)*(.08+rnd()*.11)*s;
+      const sides=3+randomInt(rnd,0,3), rot=normalizeAngle(Number(state.rotation)*2+rnd()*45);
+      const pts=[];
+      for(let k=0;k<sides;k++){ const a=rot*Math.PI/180 + k*TAU/sides; pts.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r]); }
+      if(state.depth==="offset"){
+        const sh=pts.map(q=>[q[0]+Number(state.depthOffset),q[1]+Number(state.depthOffset)]);
+        out+=polygon(sh,p.d);
+      }
+      out+=polygon(pts,fill(id,i%2?"alt":"radial",p,rnd));
+      if(i%3===0){ const pts2=pts.map(q=>[(q[0]+cx)/2,(q[1]+cy)/2]); out+=polygon(pts2,p.c); }
+    }
+    return out;
+  }
+
+  function radialFan(id,w,h,p,rnd){
+    let out=""; const count=Math.max(8,Number(state.density)*2), cx=w*(.50+(rnd()-.5)*.04), cy=h*(.58+(rnd()-.5)*.05), outer=Math.max(w,h)*.88*sized();
+    function sized(){ return sizeFactor(); }
+    const inner=Math.min(w,h)*.14*sizeFactor();
+    for(let i=0;i<count;i++){
+      const a1=Number(state.rotation)*Math.PI/180 + (i/count)*TAU;
+      const a2=Number(state.rotation)*Math.PI/180 + ((i+1.2)/count)*TAU;
+      const pts=[[cx+Math.cos(a1)*inner,cy+Math.sin(a1)*inner],[cx+Math.cos(a1)*outer,cy+Math.sin(a1)*outer],[cx+Math.cos(a2)*outer,cy+Math.sin(a2)*outer],[cx+Math.cos(a2)*inner,cy+Math.sin(a2)*inner]];
+      out+=polygon(pts,fill(id,i%3===0?"radial":"linear",p,rnd));
+    }
+    out+=circle(cx,cy,inner*.86,p.c);
+    return out;
+  }
+
+  function cornerBlocks(id,w,h,p,rnd){
+    let out=""; const s=sizeFactor(), count=Math.max(4,Math.floor(Number(state.density)/2));
+    const corners=[[w*.16,h*.18],[w*.84,h*.20],[w*.20,h*.80],[w*.78,h*.78]];
+    for(let i=0;i<count;i++){
+      const [cx,cy]=corners[i%4], ww=w*(.20+rnd()*.18)*s, hh=h*(.10+rnd()*.12)*s;
+      const rot=((i%2?1:-1)*(12+rnd()*Number(state.rotation)));
+      const f=fill(id,i%2?"alt":"linear",p,rnd);
+      if(state.depth==="offset") out+=rect(cx-ww/2+state.depthOffset,cy-hh/2+state.depthOffset,ww,hh,p.d,rxFor(Math.min(ww,hh),Math.min(ww,hh)/2),rot,cx+state.depthOffset,cy+state.depthOffset);
+      out+=rect(cx-ww/2,cy-hh/2,ww,hh,f,rxFor(Math.min(ww,hh),Math.min(ww,hh)/2),rot,cx,cy);
+    }
+    out+=circle(w*.5,h*.5,Math.min(w,h)*.08*s,fill(id,"radial",p,rnd));
+    return out;
+  }
+
+  function ringCluster(id,w,h,p,rnd){
+    let out=""; const count=Math.max(6,Math.floor(Number(state.density)*.8)), s=sizeFactor(), centerX=w*(.50+(rnd()-.5)*.08), centerY=h*(.47+(rnd()-.5)*.08);
+    for(let i=0;i<count;i++){
+      const r=Math.min(w,h)*(.08+i*.065)*s;
+      const dx=(rnd()-.5)*w*.08, dy=(rnd()-.5)*h*.08;
+      const outer=ellipse(centerX+dx,centerY+dy,r,r,fill(id,i%2?"alt":"radial",p,rnd),0);
+      const inner=ellipse(centerX+dx,centerY+dy,r*.54,r*.54,p.bg,0);
+      if(state.depth==="offset") out+=ellipse(centerX+dx+state.depthOffset,centerY+dy+state.depthOffset,r,r,p.d,0);
+      out+=outer+inner;
+    }
+    return out;
+  }
+
+  function mosaicSteps(id,w,h,p,rnd){
+    let out=""; const steps=Math.max(7,Number(state.density)+2), s=sizeFactor();
+    for(let i=0;i<steps;i++){
+      const t=i/(steps-1), ww=w*(.20+t*.66)*s, hh=h*(.055+t*.03)*s, x=w*.5-ww*.5, y=h*(.18+t*.70), rot=(rnd()-.5)*Number(state.rotation);
+      const f=fill(id,i%3===0?"radial":"linear",p,rnd);
+      if(state.depth==="offset") out+=rect(x+state.depthOffset,y+state.depthOffset,ww,hh,p.d,hh*.5,rot,w*.5+state.depthOffset,y+hh/2+state.depthOffset);
+      out+=rect(x,y,ww,hh,f,hh*.5,rot,w*.5,y+hh/2);
+    }
+    return out;
+  }
+
+  function blueEditorial(id,w,h,p,rnd,index){
+    let out="";
+    const s=sizeFactor();
+    const d=Number(state.density);
+    const gap=Number(state.spacing)/100;
+    const rot=Number(state.rotation);
+    const v=Number(state.variation)/100;
+    const blue=p.a2 || p.a;
+    const deep=mixHex(p.d,p.bg,.45);
+    const light=mixHex(p.c,"#ffffff",.45);
+    const darkBlue=mixHex(p.b,"#001a35",.28);
+    const bias=selectedComposition(index,rnd);
+    const off=Number(state.depthOffset);
+    const shadow=(shape)=> state.depth==="offset" && off>0 ? shape(off,off,p.d) : "";
+    const addPanel=(x,y,w0,h0,fillValue,rx=0,rotation=0)=>{
+      const cx=x+w0/2, cy=y+h0/2;
+      out+=shadow((ox,oy)=>rect(x+ox,y+oy,w0,h0,p.d,rx,rotation,cx+ox,cy+oy));
+      out+=rect(x,y,w0,h0,fillValue,rx,rotation,cx,cy);
+    };
+
+    const mode=index%5;
+
+    if(mode===0){
+      // Quiet inspiration cover: pale top -> deep blue-black field + oversized sphere.
+      out+=rect(0,0,1*w,1*h,fill(id,"linear",{...p,a:light,b:blue,c:light,d:p.d},rnd));
+      const cx=w*(.54+(rnd()-.5)*.08), cy=h*(.56+(rnd()-.5)*.08);
+      const r=Math.min(w,h)*(.25+.07*v)*s;
+      out+=shadow((ox,oy)=>circle(cx+ox,cy+oy,r,p.d));
+      out+=circle(cx,cy,r,fill(id,"radial",{...p,a:darkBlue,b:p.d,c:light,d:p.d},rnd));
+      // Lower dark grounding band made from a solid/gradient rectangle.
+      out+=rect(0,h*.72,w,h*.28,p.d,0);
+      out+=rect(0,h*.63,w,h*.22,fill(id,"linear",{...p,a:p.d,b:darkBlue,c:blue,d:p.d},rnd),0);
+      return out;
+    }
+
+    if(mode===1){
+      // Fan of soft capsule/petal forms rising from a dark lower corner.
+      out+=rect(0,0,w,h,p.d,0);
+      const count=Math.max(7,Math.floor(d*1.2));
+      const originX=w*(.12+(bias==="corners"?.05:0)), originY=h*(.78+(rnd()-.5)*.06);
+      for(let i=0;i<count;i++){
+        const t=i/Math.max(1,count-1);
+        const angle=(-68+t*106)+(rnd()-.5)*rot*1.4;
+        const rad=Math.min(w,h)*(.10+.07*s)*(1+t*.85);
+        let cx=originX+Math.cos(angle*Math.PI/180)*rad*(.75+gap*.8);
+        let cy=originY+Math.sin(angle*Math.PI/180)*rad*(1.25-gap*.35);
+        if(bias==="center"){cx=w*.5+(cx-w*.5)*.72;cy=h*.52+(cy-h*.52)*.72;}
+        if(bias==="diagonal") cy-=t*h*.12;
+        const ew=w*(.055+.018*(rnd()+v))*s;
+        const eh=h*(.18+.05*rnd())*s;
+        const f=fill(id,i%3===0?"radial":"linear",{...p,a:blue,b:darkBlue,c:light,d:p.d},rnd);
+        const sh=shadow((ox,oy)=>ellipse(cx+ox,cy+oy,ew,eh,p.d,angle+90));
+        out+=sh+ellipse(cx,cy,ew,eh,f,angle+90);
+      }
+      out+=circle(w*.18,h*.82,Math.min(w,h)*.12,p.d);
+      return out;
+    }
+
+    if(mode===2){
+      // Editorial glass-panel feeling without strokes: use thin filled slats and one central node.
+      out+=rect(0,0,w,h,fill(id,"linear",{...p,a:light,b:blue,c:"#f8fbff",d:p.d},rnd),0);
+      const n=Math.max(4,Math.floor(d*.75));
+      for(let i=0;i<n;i++){
+        const t=i/Math.max(1,n-1);
+        const ww=w*(.008+.010*(1-t))*(.75+v*.5);
+        const hh=h*(.34+.18*t)*s;
+        const x=w*(.16+t*.70);
+        const y=h*(.08+t*.08);
+        const f=i%2?light:mixHex(blue,"#ffffff",.35);
+        addPanel(x-ww/2,y,ww,hh,f,ww*.18,rot*(i%2?-1:1)*.35);
+      }
+      const nodeR=Math.min(w,h)*(.018+.012*v)*s;
+      out+=circle(w*.51,h*.52,nodeR,light);
+      out+=rect(w*.08,h*.74,w*.84,h*.012,light,0,0);
+      out+=rect(w*.19,h*.21,w*.012,h*.60,light,0,rot*.18);
+      return out;
+    }
+
+    if(mode===3){
+      // Dense radial fan: elongated blue forms around a lower-left dark core.
+      out+=rect(0,0,w,h,p.d,0);
+      const count=Math.max(10,Math.floor(d*1.7));
+      const cx=w*(.28+(bias==="center"?.18:0)), cy=h*(.70+(rnd()-.5)*.08);
+      const maxR=Math.min(w,h)*(.34+.12*s);
+      for(let i=0;i<count;i++){
+        const t=i/Math.max(1,count-1);
+        const a=(-90+t*120)+(rnd()-.5)*rot;
+        const rr=maxR*(.44+t*.78)*(0.82+gap*.35);
+        const x=cx+Math.cos(a*Math.PI/180)*rr*.62;
+        const y=cy+Math.sin(a*Math.PI/180)*rr*.48;
+        const rx=Math.min(w,h)*(.035+.018*rnd())*s*(1+t*.45);
+        const ry=Math.min(w,h)*(.13+.05*rnd())*s*(1+t*.35);
+        const f=fill(id,i%2?"linear":"radial",{...p,a:blue,b:darkBlue,c:light,d:p.d},rnd);
+        out+=shadow((ox,oy)=>ellipse(x+ox,y+oy,rx,ry,p.d,a+90));
+        out+=ellipse(x,y,rx,ry,f,a+90);
+      }
+      return out;
+    }
+
+    // mode 4: blue gradient hero sphere on a clean light field.
+    out+=rect(0,0,w,h,fill(id,"linear",{...p,a:"#f8fcff",b:light,c:blue,d:p.d},rnd),0);
+    const cx=w*(.56+(rnd()-.5)*.08), cy=h*(.57+(rnd()-.5)*.08);
+    const r=Math.min(w,h)*(.19+.055*v)*s;
+    out+=shadow((ox,oy)=>circle(cx+ox,cy+oy,r,p.d));
+    out+=circle(cx,cy,r,fill(id,"radial",{...p,a:darkBlue,b:p.d,c:light,d:p.d},rnd));
+    out+=rect(w*.07,h*.08,w*.86,h*.05,light,0,0);
+    return out;
+  }
+
+  function gradientField(id,w,h,p,rnd){
+    let out="";
+    const panels=6+Math.floor(Number(state.density)/3), s=sizeFactor();
+    out+=rect(w*.07,h*.08,w*.86,h*.84,fill(id,"linear",p,rnd),Math.min(w,h)*.06*s);
+    for(let i=0;i<panels;i++){
+      const x=w*(.08+rnd()*.72), y=h*(.10+rnd()*.66), ww=w*(.18+rnd()*.30)*s, hh=h*(.08+rnd()*.18)*s;
+      const f=fill(id,i%2?"radial":"alt",p,rnd), rot=(rnd()-.5)*Number(state.rotation)*2;
+      if(state.depth==="offset") out+=rect(x+state.depthOffset,y+state.depthOffset,ww,hh,p.d,hh*.32,rot,x+ww/2+state.depthOffset,y+hh/2+state.depthOffset);
+      out+=rect(x,y,ww,hh,f,hh*.32,rot,x+ww/2,y+hh/2);
+    }
+    return out;
+  }
+
+  function pebbleScatter(id,w,h,p,rnd){
+    let out=""; const count=Math.max(8,Number(state.density)+3), s=sizeFactor(), bias=selectedComposition(0,rnd);
+    for(let i=0;i<count;i++){
+      let x=w*(.08+rnd()*.84), y=h*(.08+rnd()*.84);
+      if(bias==="center"){x=w*(.25+rnd()*.5);y=h*(.18+rnd()*.64)}
+      const rx=w*(.035+rnd()*.10)*s, ry=h*(.025+rnd()*.07)*s, rot=rnd()*180;
+      const f=fill(id,i%2?"radial":"linear",p,rnd);
+      if(state.depth==="offset") out+=ellipse(x+state.depthOffset,y+state.depthOffset,rx,ry,p.d,rot);
+      out+=ellipse(x,y,rx,ry,f,rot);
+    }
+    return out;
+  }
+
+  function layout(id,w,h,p,rnd,index){
+    switch(state.designMode){
+      case "blockWave": return blockWave(id,w,h,p,rnd,index);
+      case "bubbleBloom": return bubbleBloom(id,w,h,p,rnd,index);
+      case "orbitTiles": return orbitTiles(id,w,h,p,rnd,index);
+      case "archStack": return archStack(id,w,h,p,rnd);
+      case "capsuleGrid": return capsuleGrid(id,w,h,p,rnd);
+      case "prismTiles": return prismTiles(id,w,h,p,rnd);
+      case "radialFan": return radialFan(id,w,h,p,rnd);
+      case "cornerBlocks": return cornerBlocks(id,w,h,p,rnd);
+      case "ringCluster": return ringCluster(id,w,h,p,rnd);
+      case "mosaicSteps": return mosaicSteps(id,w,h,p,rnd);
+      case "gradientField": return gradientField(id,w,h,p,rnd);
+      case "blueEditorial": return blueEditorial(id,w,h,p,rnd,index);
+      case "pebbleScatter": return pebbleScatter(id,w,h,p,rnd);
+      default: return blockWave(id,w,h,p,rnd,index);
+    }
+  }
+
+  function textLayer(index,w,h,p){
     if(!state.showText || Number(state.textAmount)<=0) return "";
-    const alpha=.25+.75*(Number(state.textAmount)/100); const title=esc(state.titleText||"GRADIENT"), sub=esc(state.subtitleText||"EDITORIAL DESIGN");
-    const fs=Math.max(18,Math.round(Math.min(w,h)*.024)), big=Math.round(Math.min(w,h)*.062);
-    const c=index%2===0?"#ffffff":p.c;
-    return `<g fill="${c}" opacity="${alpha.toFixed(2)}" font-family="Arial, Helvetica, sans-serif"><text x="${(w*.075).toFixed(1)}" y="${(h*.10).toFixed(1)}" font-size="${big}" font-weight="900" letter-spacing="3">${title}</text><text x="${(w*.078).toFixed(1)}" y="${(h*.132).toFixed(1)}" font-size="${Math.round(fs*.5)}" font-weight="700" letter-spacing="3">${sub}</text><text x="${(w*.08).toFixed(1)}" y="${(h*.93).toFixed(1)}" font-size="${Math.max(15,Math.round(fs*.36))}" font-weight="800" letter-spacing="3">ALI STUDIO / ${String(index+1).padStart(2,"0")}</text><text x="${(w*.08).toFixed(1)}" y="${(h*.952).toFixed(1)}" font-size="${Math.max(12,Math.round(fs*.27))}" font-weight="600" letter-spacing="2">${variantName(index)}</text></g>`;
+    const title=esc(state.titleText||"COLOR / FORM"), sub=esc(state.subtitleText||"GENERATIVE STUDY");
+    const rawColor=state.theme==="mono"?"#ffffff":(index%2===0?p.c:"#ffffff");
+    const textBlend=1-Number(state.textAmount)/100;
+    const color=mixHex(rawColor,p.bg,textBlend*.55);
+    const fs=Math.round(Math.min(w,h)*.028);
+    const big=Math.round(Math.min(w,h)*.075);
+    return `<g fill="${color}" font-family="Arial, Helvetica, sans-serif"><text x="${(w*.075).toFixed(1)}" y="${(h*.11).toFixed(1)}" font-size="${big}" font-weight="900" letter-spacing="2">${title}</text><text x="${(w*.078).toFixed(1)}" y="${(h*.14).toFixed(1)}" font-size="${Math.max(18,Math.round(fs*.42))}" font-weight="700" letter-spacing="4">${sub}</text><text x="${(w*.08).toFixed(1)}" y="${(h*.925).toFixed(1)}" font-size="${Math.max(16,Math.round(fs*.32))}" font-weight="800" letter-spacing="3">ALI STUDIO / ${String(index+1).padStart(2,"0")}</text></g>`;
   }
 
   function makeSvg(index){
-    const {w,h}=dims(); const rnd=rng((Number(state.seed)||1)+index*104729); const p=palette(index,rnd); const id=`ali_${Number(state.seed)||1}_${index}`; const g=makeDefs(id,p,rnd);
-    let out=g.defs+background(w,h,p,g)+renderVariant(w,h,p,g,rnd,index)+textLayer(w,h,p,index);
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><title>ALI STUDIO — Gradient Editorial — ${variantName(index)}</title><metadata>Fill and gradient primitives only. No filters, masks, strokes, paths or pattern effects.</metadata>${out}</svg>`;
+    const {w,h}=dims();
+    const rnd=rndSeed((Number(state.seed)||1)+index*9719);
+    const p=palette(index);
+    const id=`ali_${Number(state.seed)||1}_${index}`;
+    let out=defs(id,p,rnd);
+    out+=background(id,w,h,p);
+    out+=layout(id,w,h,p,rnd,index);
+    out+=textLayer(index,w,h,p);
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><title>ALI STUDIO — ${esc(THEMES[state.theme]?.name||state.theme)} — Design ${String(index+1).padStart(2,"0")}</title><metadata>Generated locally by ALI STUDIO. Shape fills and SVG gradients only.</metadata>${out}</svg>`;
   }
 
   function makeCombinedSvg(){
-    const {w:pw,h:ph}=dims(); const count=Number(state.posterCount); const cols=Math.min(4,Math.max(1,count)); const rows=Math.ceil(count/cols); const gap=40; const aw=pw*cols+gap*(cols+1), ah=ph*rows+gap*(rows+1);
-    let out=`<svg xmlns="http://www.w3.org/2000/svg" width="${aw}" height="${ah}" viewBox="0 0 ${aw} ${ah}"><title>ALI STUDIO — Gradient Editorial Collection</title><rect width="${aw}" height="${ah}" fill="#eceef1"/>`;
-    for(let i=0;i<count;i++){const x=gap+(i%cols)*(pw+gap), y=gap+Math.floor(i/cols)*(ph+gap); const inner=makeSvg(i).replace(/^<svg[^>]*>/i,"").replace(/<\/svg>\s*$/i,""); out+=`<g transform="translate(${x} ${y})">${inner}</g>`;} return out+"</svg>";
+    const {w:pw,h:ph}=dims(); const count=Number(state.posterCount), cols=Math.min(4,Math.max(1,count)), rows=Math.ceil(count/cols), gap=40;
+    const aw=pw*cols+gap*(cols+1), ah=ph*rows+gap*(rows+1);
+    let out=`<svg xmlns="http://www.w3.org/2000/svg" width="${aw}" height="${ah}" viewBox="0 0 ${aw} ${ah}"><title>ALI STUDIO Collection</title><rect width="${aw}" height="${ah}" fill="#eceef2"/>`;
+    for(let i=0;i<count;i++){
+      const x=gap+(i%cols)*(pw+gap), y=gap+Math.floor(i/cols)*(ph+gap);
+      const svg=makeSvg(i).replace(/^<svg[^>]*>/,"").replace(/<\/svg>\s*$/i,"");
+      out+=`<g transform="translate(${x} ${y})">${svg}</g>`;
+    }
+    return out+"</svg>";
   }
 
-  function download(filename,content,mime="image/svg+xml"){const blob=new Blob([content],{type:mime}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
-  async function copyText(text){try{await navigator.clipboard.writeText(text);alert("SVG copied to clipboard.");}catch{const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();alert("SVG copied to clipboard.");}}
-  function syncThemeColors(force=true){if(!force)return;const t=THEMES[$("theme")?.value]||THEMES.cyan;$("colorA").value=t.a;$("colorB").value=t.b;$("colorC").value=t.c;}
+  function download(filename,content,mime="image/svg+xml"){
+    const blob=new Blob([content],{type:mime}), a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }
+  async function copyText(text){
+    try{await navigator.clipboard.writeText(text); alert("SVG copied to clipboard.");}
+    catch{const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();alert("SVG copied to clipboard.");}
+  }
+
+  function syncThemeColors(force=true){
+    const t=THEMES[$("theme")?.value]||THEMES.crimson;
+    if(force){ $("colorA").value=t.a; $("colorB").value=t.b; $("colorC").value=t.c; }
+  }
 
   function readControls(){
-    ["posterCount","shapeSize","density","spacing","rotation","roundness","variation","gradientAngle","gradientStrength","colorMix","depthOffset","edgeMargin","textAmount"].forEach(k=>{if($(k))state[k]=Number($(k).value)});
-    ["designMode","composition","theme","gradientType","format","quality","titleText","subtitleText","seed","colorA","colorB","colorC"].forEach(k=>{if($(k))state[k]=$(k).value});
+    const numbers=["posterCount","shapeSize","density","spacing","rotation","roundness","variation","gradientAngle","gradientStrength","colorMix","depthOffset","edgeMargin","textAmount"];
+    numbers.forEach(k=>{ if($(k)) state[k]=Number($(k).value); });
+    ["designMode","composition","theme","gradientType","format","quality","titleText","subtitleText","seed","colorA","colorB","colorC"].forEach(k=>{if($(k)) state[k]=$(k).value;});
     state.seed=Number(state.seed)||1;
-    ["alternatePalette","backgroundGradient","showText"].forEach(k=>{if($(k))state[k]=$(k).checked});
-    const seg=document.querySelector(".segment.active"); if(seg)state.depth=seg.dataset.depth;
+    ["alternatePalette","backgroundGradient","showText"].forEach(k=>{if($(k)) state[k]=$(k).checked;});
+    const seg=document.querySelector(".segment.active"); if(seg) state.depth=seg.dataset.depth;
   }
-  const OUTS={posterCount:["posterCountVal",v=>v],shapeSize:["shapeSizeVal",v=>`${v}%`],density:["densityVal",v=>v],spacing:["spacingVal",v=>`${v}%`],rotation:["rotationVal",v=>`${v}°`],roundness:["roundnessVal",v=>`${v}%`],variation:["variationVal",v=>`${v}%`],gradientAngle:["gradientAngleVal",v=>`${v}°`],gradientStrength:["gradientStrengthVal",v=>`${v}%`],colorMix:["colorMixVal",v=>`${v}%`],depthOffset:["depthOffsetVal",v=>`${v}px`],edgeMargin:["edgeMarginVal",v=>`${v}%`],textAmount:["textAmountVal",v=>`${v}%`]};
+
+  const OUTS={
+    posterCount:["posterCountVal",v=>v],shapeSize:["shapeSizeVal",v=>`${v}%`],density:["densityVal",v=>v],spacing:["spacingVal",v=>`${v}%`],rotation:["rotationVal",v=>`${v}°`],roundness:["roundnessVal",v=>`${v}%`],variation:["variationVal",v=>`${v}%`],gradientAngle:["gradientAngleVal",v=>`${v}°`],gradientStrength:["gradientStrengthVal",v=>`${v}%`],colorMix:["colorMixVal",v=>`${v}%`],depthOffset:["depthOffsetVal",v=>`${v}px`],edgeMargin:["edgeMarginVal",v=>`${v}%`],textAmount:["textAmountVal",v=>`${v}%`]
+  };
   function updateOutputs(){
     Object.entries(OUTS).forEach(([id,[oid,fn]])=>{if($(oid)&&$(id))$(oid).textContent=fn($(id).value)});
     if($("collectionCount"))$("collectionCount").textContent=state.posterCount;
-    if($("collectionHint"))$("collectionHint").textContent=`${state.posterCount} UNIQUE VARIATION${state.posterCount===1?"":"S"}`;
-    if($("workspaceTitle"))$("workspaceTitle").textContent="GRADIENT EDITORIAL";
-    if($("statusMode"))$("statusMode").textContent="GRADIENT EDITORIAL ENGINE";
-    if($("statusText"))$("statusText").textContent=state.gradientType==="solid"?"Solid fills only · no SVG effects":"Smooth gradient fills · no SVG effects";
-    if($("workspaceSubtitle"))$("workspaceSubtitle").textContent=`${variantName(0)} · ${THEMES[state.theme]?.name||state.theme} · fill + gradient primitives`;
+    if($("collectionHint"))$("collectionHint").textContent=`${state.posterCount} VARIATION${state.posterCount===1?"":"S"}`;
+    const opt=$("designMode")?.options[$("designMode")?.selectedIndex];
+    if(opt&&$("workspaceTitle"))$("workspaceTitle").textContent=opt.text.toUpperCase();
+    if($("statusMode"))$("statusMode").textContent=state.depth==="offset"?"OFFSET FILL ENGINE":"FILL + GRADIENT ENGINE";
+    if($("statusText"))$("statusText").textContent=state.gradientType==="solid"?"Solid colors only · no SVG effects":"No SVG effects · clean scalable shapes";
+    if($("workspaceSubtitle"))$("workspaceSubtitle").textContent=`${THEMES[state.theme]?.name||state.theme} · ${state.gradientType} gradients · ${state.depth} layering`;
     const d=dims(); if($("previewSpec"))$("previewSpec").textContent=`${d.w} × ${d.h}`;
   }
-  function applyZoom(){const grid=$("posterGrid");if(!grid)return;grid.style.transform=`scale(${zoom})`;if($("zoomLabel"))$("zoomLabel").textContent=`${Math.round(zoom*100)}%`;const diff=grid.offsetHeight*zoom-grid.offsetHeight;grid.style.marginBottom=`${Math.max(70,diff+70)}px`;}
-  function render(){try{readControls();updateOutputs();generated=[];const grid=$("posterGrid");if(!grid)return;grid.innerHTML="";const tpl=$("posterTemplate");if(!tpl)return;for(let i=0;i<state.posterCount;i++){const node=tpl.content.firstElementChild.cloneNode(true);const svg=makeSvg(i);generated.push(svg);node.querySelector(".poster-number").textContent=`DESIGN ${String(i+1).padStart(2,"0")}`;node.querySelector(".poster-mode").textContent=`${variantName(i)}`;node.querySelector(".poster-frame").innerHTML=svg;node.querySelector(".download-one").addEventListener("click",()=>download(`ali-studio-gradient-editorial-${String(i+1).padStart(2,"0")}.svg`,svg));node.querySelector(".copy-one").addEventListener("click",()=>copyText(svg));grid.appendChild(node);}grid.style.gridTemplateColumns=`repeat(${Math.min(window.innerWidth<1180?3:4,state.posterCount)},minmax(0,1fr))`;applyZoom();}catch(e){console.error("Render Error",e)}}
+
+  function applyZoom(){
+    const grid=$("posterGrid"); if(!grid)return;
+    grid.style.transform=`scale(${zoom})`;
+    if($("zoomLabel"))$("zoomLabel").textContent=`${Math.round(zoom*100)}%`;
+    const diff=grid.offsetHeight*zoom-grid.offsetHeight; grid.style.marginBottom=`${Math.max(70,diff+70)}px`;
+  }
+
+  function render(){
+    try{
+      readControls(); updateOutputs(); generated=[]; const grid=$("posterGrid"); if(!grid)return; grid.innerHTML="";
+      const tpl=$("posterTemplate"); if(!tpl)return;
+      for(let i=0;i<state.posterCount;i++){
+        const node=tpl.content.firstElementChild.cloneNode(true); const svg=makeSvg(i); generated.push(svg);
+        node.querySelector(".poster-number").textContent=`DESIGN ${String(i+1).padStart(2,"0")}`;
+        node.querySelector(".poster-mode").textContent=`${state.depth.toUpperCase()} / ${String(i+1).padStart(2,"0")}`;
+        node.querySelector(".poster-frame").innerHTML=svg;
+        node.querySelector(".download-one").addEventListener("click",()=>download(`ali-studio-${state.theme}-${String(i+1).padStart(2,"0")}.svg`,svg));
+        node.querySelector(".copy-one").addEventListener("click",()=>copyText(svg));
+        grid.appendChild(node);
+      }
+      grid.style.gridTemplateColumns=`repeat(${Math.min(window.innerWidth<1180?3:4,state.posterCount)},minmax(0,1fr))`;
+      applyZoom();
+    }catch(e){console.error("Render Error",e)}
+  }
+
+  function applyPreset(name){
+    const p=PRESETS[name]; if(!p)return;
+    Object.entries(p).forEach(([k,v])=>{ const target=(k==="mode"?"designMode":k); if($(target)) $(target).value=v; state[target]=v; });
+    if($("theme")){$("theme").value=p.theme; syncThemeColors(true);}
+    const seg=document.querySelectorAll(".segment"); seg.forEach(b=>b.classList.toggle("active",b.dataset.depth===(p.depth||"flat")));
+    readControls(); updateOutputs(); render();
+  }
+
   function randomize(){
-    const themes=Object.keys(THEMES); $("seed").value=Math.floor(Math.random()*99999999)+1; $("theme").value=themes[Math.floor(Math.random()*themes.length)]; syncThemeColors(true);
-    $("composition").value=["auto","center","diagonal","corners","grid","scatter"][Math.floor(Math.random()*6)];
-    $("shapeSize").value=80+Math.floor(Math.random()*61);$("density").value=5+Math.floor(Math.random()*11);$("spacing").value=10+Math.floor(Math.random()*41);$("rotation").value=5+Math.floor(Math.random()*51);$("roundness").value=25+Math.floor(Math.random()*70);$("variation").value=20+Math.floor(Math.random()*81);$("gradientAngle").value=Math.floor(Math.random()*361);$("gradientStrength").value=65+Math.floor(Math.random()*36);$("colorMix").value=45+Math.floor(Math.random()*51);$("gradientType").value=["linear","radial","mixed"][Math.floor(Math.random()*3)];
+    const themes=Object.keys(THEMES), modes=["gradientEditorial","blueEditorial","blockWave","bubbleBloom","orbitTiles","archStack","capsuleGrid","prismTiles","radialFan","cornerBlocks","ringCluster","mosaicSteps","gradientField","pebbleScatter"];
+    $("seed").value=Math.floor(Math.random()*99999999)+1;
+    $("theme").value=themes[randomInt(Math.random,0,themes.length-1)]; syncThemeColors(true);
+    $("designMode").value=modes[randomInt(Math.random,0,modes.length-1)];
+    $("composition").value=["auto","center","diagonal","corners","grid","scatter"][randomInt(Math.random,0,5)];
+    $("shapeSize").value=randomInt(Math.random,70,145); $("density").value=randomInt(Math.random,5,18); $("spacing").value=randomInt(Math.random,8,48);
+    $("rotation").value=randomInt(Math.random,5,65); $("roundness").value=randomInt(Math.random,10,88); $("variation").value=randomInt(Math.random,15,85);
+    $("gradientAngle").value=randomInt(Math.random,0,360); $("gradientStrength").value=randomInt(Math.random,45,100); $("colorMix").value=randomInt(Math.random,35,92);
+    $("gradientType").value=["linear","radial","mixed"][randomInt(Math.random,0,2)];
+    const randomDepth=Math.random()>.18?"flat":"offset"; document.querySelectorAll(".segment").forEach(b=>b.classList.toggle("active",b.dataset.depth===randomDepth));
     readControls();updateOutputs();render();
   }
+
+  function resetAll(){
+    location.reload();
+  }
+
   const liveIds=["posterCount","designMode","composition","theme","shapeSize","density","spacing","rotation","roundness","variation","gradientType","gradientAngle","gradientStrength","colorMix","depthOffset","edgeMargin","format","quality","titleText","subtitleText","textAmount","seed","colorA","colorB","colorC"];
-  liveIds.forEach(id=>{const el=$(id);if(!el)return;el.addEventListener("input",()=>{updateOutputs();render()});el.addEventListener("change",()=>{if(id==="theme")syncThemeColors(true);updateOutputs();render()})});
-  ["alternatePalette","backgroundGradient","showText"].forEach(id=>$(id)?.addEventListener("change",()=>{updateOutputs();render()}));
+  liveIds.forEach(id=>{const el=$(id); if(!el)return; el.addEventListener("input",()=>{updateOutputs();render()}); el.addEventListener("change",()=>{if(id==="theme")syncThemeColors(true);updateOutputs();render()});});
+  ["alternatePalette","backgroundGradient","showText"].forEach(id=>{$(id)?.addEventListener("change",()=>{updateOutputs();render()})});
   document.querySelectorAll(".segment").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll(".segment").forEach(b=>b.classList.remove("active"));btn.classList.add("active");updateOutputs();render()}));
-  $("regenerate")?.addEventListener("click",render);$("randomize")?.addEventListener("click",randomize);$("randomizeTop")?.addEventListener("click",randomize);$("resetAll")?.addEventListener("click",()=>location.reload());
-  $("downloadAll")?.addEventListener("click",()=>download(`ali-studio-gradient-editorial-collection.svg`,makeCombinedSvg()));$("downloadJson")?.addEventListener("click",()=>download("ali-studio-settings.json",JSON.stringify(state,null,2),"application/json"));
-  $("zoomIn")?.addEventListener("click",()=>{zoom=clamp(zoom+.1,.3,2);applyZoom()});$("zoomOut")?.addEventListener("click",()=>{zoom=clamp(zoom-.1,.3,2);applyZoom()});window.addEventListener("resize",()=>{if($("posterGrid"))render()});
-  syncThemeColors(true); updateOutputs(); render();
+  document.querySelectorAll(".preset").forEach(btn=>btn.addEventListener("click",()=>applyPreset(btn.dataset.preset)));
+  $("regenerate")?.addEventListener("click",render); $("randomize")?.addEventListener("click",randomize); $("randomizeTop")?.addEventListener("click",randomize); $("resetAll")?.addEventListener("click",resetAll);
+  $("downloadAll")?.addEventListener("click",()=>download(`ali-studio-${state.theme}-collection.svg`,makeCombinedSvg()));
+  $("downloadJson")?.addEventListener("click",()=>download("ali-studio-settings.json",JSON.stringify(state,null,2),"application/json"));
+  $("zoomIn")?.addEventListener("click",()=>{zoom=clamp(zoom+.1,.3,2);applyZoom()}); $("zoomOut")?.addEventListener("click",()=>{zoom=clamp(zoom-.1,.3,2);applyZoom()});
+  window.addEventListener("resize",()=>{if($("posterGrid"))render()});
+
+  updateOutputs(); render();
 })();
