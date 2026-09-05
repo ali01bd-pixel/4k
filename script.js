@@ -20,16 +20,16 @@
   };
 
   const PRESETS = {
-    studio: { theme:"crimson", mode:"blockWave", composition:"diagonal", density:8, shapeSize:100, spacing:24, rotation:18, roundness:48, variation:52, gradientType:"linear", gradientAngle:35, gradientStrength:76, colorMix:68, depth:"flat" },
-    sunset: { theme:"sunset", mode:"gradientField", composition:"center", density:7, shapeSize:120, spacing:16, rotation:28, roundness:60, variation:42, gradientType:"radial", gradientAngle:80, gradientStrength:90, colorMix:76, depth:"offset" },
-    electric: { theme:"electric", mode:"prismTiles", composition:"grid", density:12, shapeSize:95, spacing:14, rotation:42, roundness:16, variation:70, gradientType:"mixed", gradientAngle:120, gradientStrength:84, colorMix:62, depth:"flat" },
-    pastel: { theme:"pastel", mode:"bubbleBloom", composition:"scatter", density:8, shapeSize:112, spacing:30, rotation:12, roundness:75, variation:48, gradientType:"radial", gradientAngle:210, gradientStrength:65, colorMix:74, depth:"flat" },
-    mono: { theme:"mono", mode:"ringCluster", composition:"center", density:11, shapeSize:106, spacing:19, rotation:24, roundness:35, variation:32, gradientType:"linear", gradientAngle:25, gradientStrength:70, colorMix:34, depth:"offset" },
-    lime: { theme:"lime", mode:"cornerBlocks", composition:"corners", density:7, shapeSize:125, spacing:12, rotation:32, roundness:22, variation:58, gradientType:"linear", gradientAngle:145, gradientStrength:78, colorMix:72, depth:"flat" }
+    studio: { theme:"crimson", mode:"chromaticEditorial", composition:"diagonal", density:8, shapeSize:100, spacing:24, rotation:18, roundness:48, variation:52, gradientType:"linear", gradientAngle:35, gradientStrength:76, colorMix:68, depth:"flat" },
+    sunset: { theme:"sunset", mode:"chromaticEditorial", composition:"center", density:7, shapeSize:120, spacing:16, rotation:28, roundness:60, variation:42, gradientType:"radial", gradientAngle:80, gradientStrength:90, colorMix:76, depth:"offset" },
+    electric: { theme:"electric", mode:"chromaticEditorial", composition:"grid", density:12, shapeSize:95, spacing:14, rotation:42, roundness:16, variation:70, gradientType:"mixed", gradientAngle:120, gradientStrength:84, colorMix:62, depth:"flat" },
+    pastel: { theme:"pastel", mode:"chromaticEditorial", composition:"scatter", density:8, shapeSize:112, spacing:30, rotation:12, roundness:75, variation:48, gradientType:"radial", gradientAngle:210, gradientStrength:65, colorMix:74, depth:"flat" },
+    mono: { theme:"mono", mode:"chromaticEditorial", composition:"center", density:11, shapeSize:106, spacing:19, rotation:24, roundness:35, variation:32, gradientType:"linear", gradientAngle:25, gradientStrength:70, colorMix:34, depth:"offset" },
+    lime: { theme:"lime", mode:"chromaticEditorial", composition:"corners", density:7, shapeSize:125, spacing:12, rotation:32, roundness:22, variation:58, gradientType:"linear", gradientAngle:145, gradientStrength:78, colorMix:72, depth:"flat" }
   };
 
   const state = {
-    posterCount:5, designMode:"blockWave", composition:"auto", theme:"crimson",
+    posterCount:5, designMode:"chromaticEditorial", composition:"auto", theme:"crimson",
     depth:"flat", shapeSize:100, density:8, spacing:24, rotation:18, roundness:48,
     variation:52, gradientType:"linear", gradientAngle:35, gradientStrength:76, colorMix:68,
     depthOffset:18, edgeMargin:8, backgroundGradient:true, alternatePalette:true,
@@ -80,9 +80,10 @@
     const theme=THEMES[state.theme] || THEMES.crimson;
     const rotate=state.alternatePalette ? index : 0;
     const shift=(rotate%3)*.14;
-    const a=mixHex(state.colorA,theme.a,shift);
-    const b=mixHex(state.colorB,theme.b,shift);
-    const c=mixHex(state.colorC,theme.c,shift);
+    const userMix=Number(state.colorMix)/100;
+    const a=mixHex(state.colorA,theme.a,clamp(shift*(1-userMix)+0.12*userMix,0,1));
+    const b=mixHex(state.colorB,theme.b,clamp(shift*(1-userMix)+0.10*userMix,0,1));
+    const c=mixHex(state.colorC,theme.c,clamp(shift*(1-userMix)+0.08*userMix,0,1));
     const d=theme.d;
     return {
       bg:theme.bg,
@@ -137,313 +138,166 @@
     return shapeFn(state.depthOffset,state.depthOffset,true);
   }
 
-  function blockWave(id,w,h,p,rnd,index){
-    let out=""; const s=sizeFactor(), d=Number(state.density), bias=selectedComposition(index,rnd);
-    const count=Math.max(5,d);
-    const gap=Number(state.spacing)/100;
-    const baseW=w*(.14+.10*(1-gap))*s;
-    const baseH=h*(.10+.035*(1-gap))*s;
-    const cols=Math.max(4,Math.ceil(count/2));
-    for(let i=0;i<count;i++){
-      let x=w*(.10 + (i/(Math.max(1,count-1)))*.80);
-      let y=h*(.18 + (i%2)*.44 + (rnd()-.5)*.10);
-      if(bias==="center") { x += (w*.5-x)*.18; y += (h*.5-y)*.18; }
-      if(bias==="diagonal") y += (x/w-.5)*h*.28;
-      if(bias==="corners") x = i%2 ? w*.72 : w*.20;
-      const ww=baseW*(.78+rnd()*(.56+state.variation/120));
-      const hh=baseH*(.82+rnd()*(.42+state.variation/140));
-      const rot=(rnd()-.5)*Number(state.rotation)*1.7;
-      const rx=rxFor(Math.min(ww,hh), Math.min(ww,hh)*.50);
-      const f=fill(id,i%2?"alt":"linear",p,rnd);
-      const sh=shadowLayer((ox,oy)=>rect(x+ox-ww/2,y+oy-hh/2,ww,hh, p.d, rx, rot,x+ox,y+oy));
-      out+=sh+rect(x-ww/2,y-hh/2,ww,hh,f,rx,rot,x,y);
-    }
-    if(bias==="grid"){
-      const side=Math.min(w,h)*.36*s;
-      out += rect(w*.5-side/2,h*.5-side/2,side,side,fill(id,"radial",p,rnd),side*.12,0,w*.5,h*.5);
-    }
-    return out;
-  }
-
-  function bubbleBloom(id,w,h,p,rnd,index){
-    let out=""; const s=sizeFactor(), count=Math.max(6,Math.floor(Number(state.density)*.85)), bias=selectedComposition(index,rnd);
-    for(let i=0;i<count;i++){
-      let cx=w*(.10+rnd()*.80), cy=h*(.12+rnd()*.76);
-      if(bias==="center"){cx=w*(.28+rnd()*.44); cy=h*(.23+rnd()*.54)}
-      if(bias==="corners"){cx=i%2?w*(.70+rnd()*.18):w*(.08+rnd()*.18); cy=i%2?h*(.68+rnd()*.18):h*(.08+rnd()*.18)}
-      const r=Math.min(w,h)*(.055+rnd()*.12)*s*(.82+state.variation/180);
-      const f=fill(id,i%3===0?"radial":"linear",p,rnd);
-      if(state.depth==="offset") out+=circle(cx+Number(state.depthOffset),cy+Number(state.depthOffset),r,p.d);
-      out+=circle(cx,cy,r,f);
-      if(state.roundness>65 && r>26) out+=circle(cx-r*.28,cy-r*.30,r*.18,p.c);
-    }
-    return out;
-  }
-
-  function orbitTiles(id,w,h,p,rnd,index){
-    let out=""; const s=sizeFactor(), n=Math.max(6,Number(state.density)), cx=w*(.5+(rnd()-.5)*.06), cy=h*(.50+(rnd()-.5)*.08), radius=Math.min(w,h)*.28*s;
-    for(let i=0;i<n;i++){
-      const a=i*TAU/n + (rnd()-.5)*.2;
-      const rr=radius*(.68+rnd()*.42);
-      const x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr;
-      const size=Math.min(w,h)*(.06+rnd()*.045)*s;
-      const f=fill(id,i%2?"alt":"linear",p,rnd);
-      const sh=shadowLayer((ox,oy)=>{ const pts=[[x-size+ox,y-size+oy],[x+size+ox,y-size+oy],[x+size+ox,y+size+oy],[x-size+ox,y+size+oy]]; return polygon(pts,p.d); });
-      out+=sh+rect(x-size,y-size,size*2,size*2,f,size*.12,(a*180/Math.PI)+Number(state.rotation),x,y);
-    }
-    out+=circle(cx,cy,radius*.42,fill(id,"radial",p,rnd));
-    return out;
-  }
-
-  function archStack(id,w,h,p,rnd){
-    let out=""; const layers=Math.max(5,Math.floor(Number(state.density)*.7)), s=sizeFactor();
-    const centerX=w*(.50+(rnd()-.5)*.08), baseY=h*.80;
-    for(let i=0;i<layers;i++){
-      const ww=w*(.30+i*(.10+Number(state.spacing)/1000))*s;
-      const hh=h*(.16+i*.045)*s;
-      const rx=ww*.50;
-      const y=baseY-hh;
-      const f=fill(id,i%2?"radial":"linear",p,rnd);
-      if(state.depth==="offset") out+=rect(centerX-ww/2+Number(state.depthOffset),y+Number(state.depthOffset),ww,hh,p.d,rx,0,centerX+Number(state.depthOffset),y+hh/2+Number(state.depthOffset));
-      out+=rect(centerX-ww/2,y,ww,hh,f,rx);
-    }
-    return out;
-  }
-
-  function capsuleGrid(id,w,h,p,rnd){
-    let out=""; const cols=Math.max(3,Math.min(6,Math.floor(Number(state.density)/2))), rows=Math.max(3,Math.min(8,Math.floor(Number(state.density)*.65))), s=sizeFactor();
-    const cellW=w/(cols+1), cellH=h/(rows+1);
-    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-      const x=cellW*(c+1), y=cellH*(r+1), ww=cellW*(.56+state.variation/250)*s, hh=cellH*(.45+state.variation/300)*s;
-      const rot=(rnd()-.5)*Number(state.rotation);
-      const f=fill(id,(r+c)%3===0?"radial":"linear",p,rnd);
-      if(state.depth==="offset") out+=rect(x-ww/2+state.depthOffset,y-hh/2+state.depthOffset,ww,hh,p.d,Math.min(ww,hh)/2,rot,x+state.depthOffset,y+state.depthOffset);
-      out+=rect(x-ww/2,y-hh/2,ww,hh,f,Math.min(ww,hh)/2,rot,x,y);
-    }
-    return out;
-  }
-
-  function prismTiles(id,w,h,p,rnd){
-    let out=""; const n=Math.max(5,Math.floor(Number(state.density)*.8)), s=sizeFactor();
-    for(let i=0;i<n;i++){
-      const cx=w*(.12+rnd()*.76), cy=h*(.12+rnd()*.76), r=Math.min(w,h)*(.08+rnd()*.11)*s;
-      const sides=3+randomInt(rnd,0,3), rot=normalizeAngle(Number(state.rotation)*2+rnd()*45);
-      const pts=[];
-      for(let k=0;k<sides;k++){ const a=rot*Math.PI/180 + k*TAU/sides; pts.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r]); }
-      if(state.depth==="offset"){
-        const sh=pts.map(q=>[q[0]+Number(state.depthOffset),q[1]+Number(state.depthOffset)]);
-        out+=polygon(sh,p.d);
-      }
-      out+=polygon(pts,fill(id,i%2?"alt":"radial",p,rnd));
-      if(i%3===0){ const pts2=pts.map(q=>[(q[0]+cx)/2,(q[1]+cy)/2]); out+=polygon(pts2,p.c); }
-    }
-    return out;
-  }
-
-  function radialFan(id,w,h,p,rnd){
-    let out=""; const count=Math.max(8,Number(state.density)*2), cx=w*(.50+(rnd()-.5)*.04), cy=h*(.58+(rnd()-.5)*.05), outer=Math.max(w,h)*.88*sized();
-    function sized(){ return sizeFactor(); }
-    const inner=Math.min(w,h)*.14*sizeFactor();
-    for(let i=0;i<count;i++){
-      const a1=Number(state.rotation)*Math.PI/180 + (i/count)*TAU;
-      const a2=Number(state.rotation)*Math.PI/180 + ((i+1.2)/count)*TAU;
-      const pts=[[cx+Math.cos(a1)*inner,cy+Math.sin(a1)*inner],[cx+Math.cos(a1)*outer,cy+Math.sin(a1)*outer],[cx+Math.cos(a2)*outer,cy+Math.sin(a2)*outer],[cx+Math.cos(a2)*inner,cy+Math.sin(a2)*inner]];
-      out+=polygon(pts,fill(id,i%3===0?"radial":"linear",p,rnd));
-    }
-    out+=circle(cx,cy,inner*.86,p.c);
-    return out;
-  }
-
-  function cornerBlocks(id,w,h,p,rnd){
-    let out=""; const s=sizeFactor(), count=Math.max(4,Math.floor(Number(state.density)/2));
-    const corners=[[w*.16,h*.18],[w*.84,h*.20],[w*.20,h*.80],[w*.78,h*.78]];
-    for(let i=0;i<count;i++){
-      const [cx,cy]=corners[i%4], ww=w*(.20+rnd()*.18)*s, hh=h*(.10+rnd()*.12)*s;
-      const rot=((i%2?1:-1)*(12+rnd()*Number(state.rotation)));
-      const f=fill(id,i%2?"alt":"linear",p,rnd);
-      if(state.depth==="offset") out+=rect(cx-ww/2+state.depthOffset,cy-hh/2+state.depthOffset,ww,hh,p.d,rxFor(Math.min(ww,hh),Math.min(ww,hh)/2),rot,cx+state.depthOffset,cy+state.depthOffset);
-      out+=rect(cx-ww/2,cy-hh/2,ww,hh,f,rxFor(Math.min(ww,hh),Math.min(ww,hh)/2),rot,cx,cy);
-    }
-    out+=circle(w*.5,h*.5,Math.min(w,h)*.08*s,fill(id,"radial",p,rnd));
-    return out;
-  }
-
-  function ringCluster(id,w,h,p,rnd){
-    let out=""; const count=Math.max(6,Math.floor(Number(state.density)*.8)), s=sizeFactor(), centerX=w*(.50+(rnd()-.5)*.08), centerY=h*(.47+(rnd()-.5)*.08);
-    for(let i=0;i<count;i++){
-      const r=Math.min(w,h)*(.08+i*.065)*s;
-      const dx=(rnd()-.5)*w*.08, dy=(rnd()-.5)*h*.08;
-      const outer=ellipse(centerX+dx,centerY+dy,r,r,fill(id,i%2?"alt":"radial",p,rnd),0);
-      const inner=ellipse(centerX+dx,centerY+dy,r*.54,r*.54,p.bg,0);
-      if(state.depth==="offset") out+=ellipse(centerX+dx+state.depthOffset,centerY+dy+state.depthOffset,r,r,p.d,0);
-      out+=outer+inner;
-    }
-    return out;
-  }
-
-  function mosaicSteps(id,w,h,p,rnd){
-    let out=""; const steps=Math.max(7,Number(state.density)+2), s=sizeFactor();
-    for(let i=0;i<steps;i++){
-      const t=i/(steps-1), ww=w*(.20+t*.66)*s, hh=h*(.055+t*.03)*s, x=w*.5-ww*.5, y=h*(.18+t*.70), rot=(rnd()-.5)*Number(state.rotation);
-      const f=fill(id,i%3===0?"radial":"linear",p,rnd);
-      if(state.depth==="offset") out+=rect(x+state.depthOffset,y+state.depthOffset,ww,hh,p.d,hh*.5,rot,w*.5+state.depthOffset,y+hh/2+state.depthOffset);
-      out+=rect(x,y,ww,hh,f,hh*.5,rot,w*.5,y+hh/2);
-    }
-    return out;
-  }
-
-  function blueEditorial(id,w,h,p,rnd,index){
-    let out="";
+  function chromaticEditorial(id,w,h,p,rnd,index){
     const s=sizeFactor();
-    const d=Number(state.density);
+    const d=Math.max(3,Number(state.density));
     const gap=Number(state.spacing)/100;
     const rot=Number(state.rotation);
+    const round=Number(state.roundness)/100;
     const v=Number(state.variation)/100;
-    const blue=p.a2 || p.a;
-    const deep=mixHex(p.d,p.bg,.45);
-    const light=mixHex(p.c,"#ffffff",.45);
-    const darkBlue=mixHex(p.b,"#001a35",.28);
+    const margin=w*(Number(state.edgeMargin)/100);
+    const innerW=w-margin*2, innerH=h-margin*2;
     const bias=selectedComposition(index,rnd);
-    const off=Number(state.depthOffset);
-    const shadow=(shape)=> state.depth==="offset" && off>0 ? shape(off,off,p.d) : "";
-    const addPanel=(x,y,w0,h0,fillValue,rx=0,rotation=0)=>{
-      const cx=x+w0/2, cy=y+h0/2;
-      out+=shadow((ox,oy)=>rect(x+ox,y+oy,w0,h0,p.d,rx,rotation,cx+ox,cy+oy));
-      out+=rect(x,y,w0,h0,fillValue,rx,rotation,cx,cy);
-    };
-
-    const mode=index%5;
-
-    if(mode===0){
-      // Quiet inspiration cover: pale top -> deep blue-black field + oversized sphere.
-      out+=rect(0,0,1*w,1*h,fill(id,"linear",{...p,a:light,b:blue,c:light,d:p.d},rnd));
-      const cx=w*(.54+(rnd()-.5)*.08), cy=h*(.56+(rnd()-.5)*.08);
-      const r=Math.min(w,h)*(.25+.07*v)*s;
-      out+=shadow((ox,oy)=>circle(cx+ox,cy+oy,r,p.d));
-      out+=circle(cx,cy,r,fill(id,"radial",{...p,a:darkBlue,b:p.d,c:light,d:p.d},rnd));
-      // Lower dark grounding band made from a solid/gradient rectangle.
-      out+=rect(0,h*.72,w,h*.28,p.d,0);
-      out+=rect(0,h*.63,w,h*.22,fill(id,"linear",{...p,a:p.d,b:darkBlue,c:blue,d:p.d},rnd),0);
-      return out;
-    }
-
-    if(mode===1){
-      // Fan of soft capsule/petal forms rising from a dark lower corner.
-      out+=rect(0,0,w,h,p.d,0);
-      const count=Math.max(7,Math.floor(d*1.2));
-      const originX=w*(.12+(bias==="corners"?.05:0)), originY=h*(.78+(rnd()-.5)*.06);
-      for(let i=0;i<count;i++){
-        const t=i/Math.max(1,count-1);
-        const angle=(-68+t*106)+(rnd()-.5)*rot*1.4;
-        const rad=Math.min(w,h)*(.10+.07*s)*(1+t*.85);
-        let cx=originX+Math.cos(angle*Math.PI/180)*rad*(.75+gap*.8);
-        let cy=originY+Math.sin(angle*Math.PI/180)*rad*(1.25-gap*.35);
-        if(bias==="center"){cx=w*.5+(cx-w*.5)*.72;cy=h*.52+(cy-h*.52)*.72;}
-        if(bias==="diagonal") cy-=t*h*.12;
-        const ew=w*(.055+.018*(rnd()+v))*s;
-        const eh=h*(.18+.05*rnd())*s;
-        const f=fill(id,i%3===0?"radial":"linear",{...p,a:blue,b:darkBlue,c:light,d:p.d},rnd);
-        const sh=shadow((ox,oy)=>ellipse(cx+ox,cy+oy,ew,eh,p.d,angle+90));
-        out+=sh+ellipse(cx,cy,ew,eh,f,angle+90);
-      }
-      out+=circle(w*.18,h*.82,Math.min(w,h)*.12,p.d);
-      return out;
-    }
-
-    if(mode===2){
-      // Editorial glass-panel feeling without strokes: use thin filled slats and one central node.
-      out+=rect(0,0,w,h,fill(id,"linear",{...p,a:light,b:blue,c:"#f8fbff",d:p.d},rnd),0);
-      const n=Math.max(4,Math.floor(d*.75));
-      for(let i=0;i<n;i++){
-        const t=i/Math.max(1,n-1);
-        const ww=w*(.008+.010*(1-t))*(.75+v*.5);
-        const hh=h*(.34+.18*t)*s;
-        const x=w*(.16+t*.70);
-        const y=h*(.08+t*.08);
-        const f=i%2?light:mixHex(blue,"#ffffff",.35);
-        addPanel(x-ww/2,y,ww,hh,f,ww*.18,rot*(i%2?-1:1)*.35);
-      }
-      const nodeR=Math.min(w,h)*(.018+.012*v)*s;
-      out+=circle(w*.51,h*.52,nodeR,light);
-      out+=rect(w*.08,h*.74,w*.84,h*.012,light,0,0);
-      out+=rect(w*.19,h*.21,w*.012,h*.60,light,0,rot*.18);
-      return out;
-    }
-
-    if(mode===3){
-      // Dense radial fan: elongated blue forms around a lower-left dark core.
-      out+=rect(0,0,w,h,p.d,0);
-      const count=Math.max(10,Math.floor(d*1.7));
-      const cx=w*(.28+(bias==="center"?.18:0)), cy=h*(.70+(rnd()-.5)*.08);
-      const maxR=Math.min(w,h)*(.34+.12*s);
-      for(let i=0;i<count;i++){
-        const t=i/Math.max(1,count-1);
-        const a=(-90+t*120)+(rnd()-.5)*rot;
-        const rr=maxR*(.44+t*.78)*(0.82+gap*.35);
-        const x=cx+Math.cos(a*Math.PI/180)*rr*.62;
-        const y=cy+Math.sin(a*Math.PI/180)*rr*.48;
-        const rx=Math.min(w,h)*(.035+.018*rnd())*s*(1+t*.45);
-        const ry=Math.min(w,h)*(.13+.05*rnd())*s*(1+t*.35);
-        const f=fill(id,i%2?"linear":"radial",{...p,a:blue,b:darkBlue,c:light,d:p.d},rnd);
-        out+=shadow((ox,oy)=>ellipse(x+ox,y+oy,rx,ry,p.d,a+90));
-        out+=ellipse(x,y,rx,ry,f,a+90);
-      }
-      return out;
-    }
-
-    // mode 4: blue gradient hero sphere on a clean light field.
-    out+=rect(0,0,w,h,fill(id,"linear",{...p,a:"#f8fcff",b:light,c:blue,d:p.d},rnd),0);
-    const cx=w*(.56+(rnd()-.5)*.08), cy=h*(.57+(rnd()-.5)*.08);
-    const r=Math.min(w,h)*(.19+.055*v)*s;
-    out+=shadow((ox,oy)=>circle(cx+ox,cy+oy,r,p.d));
-    out+=circle(cx,cy,r,fill(id,"radial",{...p,a:darkBlue,b:p.d,c:light,d:p.d},rnd));
-    out+=rect(w*.07,h*.08,w*.86,h*.05,light,0,0);
-    return out;
-  }
-
-  function gradientField(id,w,h,p,rnd){
+    const pick=(i=0)=>fill(id,(i%3===0?"radial":i%2?"alt":"linear"),p,rnd);
     let out="";
-    const panels=6+Math.floor(Number(state.density)/3), s=sizeFactor();
-    out+=rect(w*.07,h*.08,w*.86,h*.84,fill(id,"linear",p,rnd),Math.min(w,h)*.06*s);
-    for(let i=0;i<panels;i++){
-      const x=w*(.08+rnd()*.72), y=h*(.10+rnd()*.66), ww=w*(.18+rnd()*.30)*s, hh=h*(.08+rnd()*.18)*s;
-      const f=fill(id,i%2?"radial":"alt",p,rnd), rot=(rnd()-.5)*Number(state.rotation)*2;
-      if(state.depth==="offset") out+=rect(x+state.depthOffset,y+state.depthOffset,ww,hh,p.d,hh*.32,rot,x+ww/2+state.depthOffset,y+hh/2+state.depthOffset);
-      out+=rect(x,y,ww,hh,f,hh*.32,rot,x+ww/2,y+hh/2);
-    }
-    return out;
-  }
+    const dark=p.bg;
+    const light=p.c;
+    const f1=pick(0), f2=pick(1), f3=pick(2);
+    const accent=p.a, accent2=p.b;
 
-  function pebbleScatter(id,w,h,p,rnd){
-    let out=""; const count=Math.max(8,Number(state.density)+3), s=sizeFactor(), bias=selectedComposition(0,rnd);
-    for(let i=0;i<count;i++){
-      let x=w*(.08+rnd()*.84), y=h*(.08+rnd()*.84);
-      if(bias==="center"){x=w*(.25+rnd()*.5);y=h*(.18+rnd()*.64)}
-      const rx=w*(.035+rnd()*.10)*s, ry=h*(.025+rnd()*.07)*s, rot=rnd()*180;
-      const f=fill(id,i%2?"radial":"linear",p,rnd);
-      if(state.depth==="offset") out+=ellipse(x+state.depthOffset,y+state.depthOffset,rx,ry,p.d,rot);
-      out+=ellipse(x,y,rx,ry,f,rot);
+    // Every variation below uses only filled rectangles, circles, ellipses and polygons.
+    // The eight compositions echo the supplied editorial reference while remaining deterministic and editable.
+    if(index%8===0){
+      out+=`<rect width="${w}" height="${h}" fill="${dark}"/>`;
+      const cx=w*(bias==="corners"?.68:.50), cy=h*(bias==="diagonal"?.54:.50);
+      const rings=Math.max(10,Math.floor(d*1.5));
+      for(let i=0;i<rings;i++){
+        const t=i/(rings-1), rx=innerW*(.06+t*.34)*s*(1+v*.12), ry=innerH*(.012+t*.045)*s;
+        const x=cx + (rnd()-.5)*innerW*.10*(1+v), y=cy + Math.sin(i*.65)*innerH*.05;
+        const f=i%3===0?f2:(i%2?f1:accent2);
+        out+=ellipse(x,y,rx,ry,f,(rot-28+t*55)+(rnd()-.5)*rot*.25);
+      }
+      for(let i=0;i<Math.max(5,Math.floor(d/2));i++){
+        out+=ellipse(w*(.13+rnd()*.74),h*(.10+rnd()*.82),w*(.018+rnd()*.045)*s,h*(.010+rnd()*.028)*s,p.c,rnd()*180);
+      }
+      out+=circle(cx,cy,Math.min(w,h)*.05*s,light);
+      return out;
     }
+
+    if(index%8===1){
+      out+=`<rect width="${w}" height="${h}" fill="${light}"/>`;
+      const steps=Math.max(5,Math.floor(d*.65));
+      const span=innerW*.78;
+      const rw=innerW*(.17+.04*v)*s;
+      const rh=innerH*(.12+.025*(1-gap))*s;
+      const baseX=w*.50, baseY=h*(.18 + (bias==="center"?.04:0));
+      for(let i=0;i<steps;i++){
+        const t=i/(steps-1);
+        const x=baseX-span*.38+t*span*.76;
+        const y=baseY+innerH*(.14+t*.68);
+        const angle=(i%2?1:-1)*(28+rot*.35)+Math.sin(i*.9)*rot*.25;
+        const f=i%3===0?f2:(i%2?f1:f3);
+        const rx=Math.min(rw,rh)*(.30+.55*round);
+        if(state.depth==="offset") out+=rect(x-rw/2+state.depthOffset,y-rh/2+state.depthOffset,rw,rh,p.d,rx,angle,x+state.depthOffset,y+state.depthOffset);
+        out+=rect(x-rw/2,y-rh/2,rw,rh,f,rx,angle,x,y);
+      }
+      out+=polygon([[w*.50,h*.08],[w*.68,h*.19],[w*.56,h*.31],[w*.34,h*.23]],accent2);
+      return out;
+    }
+
+    if(index%8===2){
+      out+=`<rect width="${w}" height="${h}" fill="${dark}"/>`;
+      const bars=Math.max(6,Math.floor(d*.95));
+      for(let i=0;i<bars;i++){
+        const x=w*(.08+i*(.78/Math.max(1,bars-1)));
+        const ww=w*(.11+.06*rnd())*s;
+        const hh=h*(.23+.25*rnd())*s;
+        const y=h*(.18+rnd()*.58);
+        const angle=(rnd()-.5)*rot*1.2;
+        const fillV=i%3===0?f1:(i%2?accent: f2);
+        const rx=Math.min(ww,hh)*(.24+.55*round);
+        if(state.depth==="offset") out+=rect(x-ww/2+state.depthOffset,y-hh/2+state.depthOffset,ww,hh,p.d,rx,angle,x+state.depthOffset,y+state.depthOffset);
+        out+=rect(x-ww/2,y-hh/2,ww,hh,fillV,rx,angle,x,y);
+      }
+      for(let i=0;i<Math.max(5,Math.floor(d));i++) out+=ellipse(w*(.12+rnd()*.76),h*(.10+rnd()*.80),w*(.02+rnd()*.05)*s,h*(.009+rnd()*.028)*s,i%2?f3:light,rnd()*180);
+      return out;
+    }
+
+    if(index%8===3){
+      out+=`<rect width="${w}" height="${h}" fill="${f3}"/>`;
+      const pieces=Math.max(7,Math.floor(d*.9));
+      for(let i=0;i<pieces;i++){
+        const cx=w*(.18+rnd()*.64), cy=h*(.18+rnd()*.65), ww=w*(.10+rnd()*.18)*s, hh=h*(.05+rnd()*.14)*s;
+        const a=(rnd()-.5)*rot*2;
+        const sh=i%4;
+        let fillV=[accent,accent2,p.c,f1][sh];
+        if(i%3===0){
+          const pts=[[cx,cy-hh/2],[cx+ww*.45,cy],[cx,cy+hh/2],[cx-ww*.45,cy]];
+          if(state.depth==="offset") out+=polygon(pts.map(q=>[q[0]+state.depthOffset,q[1]+state.depthOffset]),p.d);
+          out+=polygon(pts,fillV);
+        }else{
+          const rx=Math.min(ww,hh)*(.18+.68*round);
+          if(state.depth==="offset") out+=rect(cx-ww/2+state.depthOffset,cy-hh/2+state.depthOffset,ww,hh,p.d,rx,a,cx+state.depthOffset,cy+state.depthOffset);
+          out+=rect(cx-ww/2,cy-hh/2,ww,hh,fillV,rx,a,cx,cy);
+        }
+      }
+      return out;
+    }
+
+    if(index%8===4){
+      out+=`<rect width="${w}" height="${h}" fill="${light}"/>`;
+      const c1=[w*.30,h*.33], c2=[w*.67,h*.58];
+      const r1=Math.min(w,h)*(.19+.08*v)*s, r2=Math.min(w,h)*(.14+.06*rnd())*s;
+      out+=circle(c1[0],c1[1],r1,f1); out+=circle(c2[0],c2[1],r2,f2);
+      out+=ellipse(w*.52,h*.28,w*.28*s,h*.045*s,accent2,rot*.4);
+      out+=ellipse(w*.56,h*.78,w*.34*s,h*.055*s,accent,rot*-0.5);
+      const small=Math.max(4,Math.floor(d/2));
+      for(let i=0;i<small;i++) out+=circle(w*(.10+rnd()*.80),h*(.12+rnd()*.76),Math.min(w,h)*(.012+rnd()*.035)*s,i%2?f3:accent);
+      return out;
+    }
+
+    if(index%8===5){
+      out+=`<rect width="${w}" height="${h}" fill="${dark}"/>`;
+      const cols=Math.max(5,Math.min(8,Math.floor(d*.7))), rows=Math.max(6,Math.min(10,Math.floor(d*.78)));
+      const cw=innerW/cols, ch=innerH/rows;
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+        const x=margin+c*cw, y=margin+r*ch;
+        const ww=cw*(.82+.12*rnd())*(1-gap*.25), hh=ch*(.82+.12*rnd())*(1-gap*.25);
+        const palette=[accent,accent2,p.c,p.b,f1,f2][(r+c+index)%6];
+        const rx=Math.min(ww,hh)*(.08+.38*round);
+        out+=rect(x+(cw-ww)/2,y+(ch-hh)/2,ww,hh,palette,rx,(rnd()-.5)*rot*.45,x+cw/2,y+ch/2);
+      }
+      out+=rect(w*.28,h*.39,w*.44,h*.20,p.c,Math.min(w,h)*.02,0,w*.5,h*.49);
+      return out;
+    }
+
+    if(index%8===6){
+      out+=`<rect width="${w}" height="${h}" fill="${accent}"/>`;
+      out+=rect(w*.54,h*.52,w*.46,h*.48,accent2,0,0,w*.77,h*.76);
+      out+=rect(0,h*.60,w*.38,h*.40,f3,0,0,w*.19,h*.80);
+      const cx=w*.58, cy=h*.47;
+      const r=Math.min(w,h)*(.20+.06*v)*s;
+      out+=circle(cx,cy,r,f2);
+      const rays=Math.max(6,Math.floor(d*.8));
+      for(let i=0;i<rays;i++){
+        const a=normalizeAngle(rot+i*360/rays)*Math.PI/180, len=Math.min(w,h)*(.12+.05*rnd())*s, wi=Math.min(w,h)*(.025+.018*rnd())*s;
+        const p1=[cx+Math.cos(a)*r*.9,cy+Math.sin(a)*r*.9], p2=[cx+Math.cos(a)*len+r*Math.cos(a),cy+Math.sin(a)*len+r*Math.sin(a)];
+        const p3=[p2[0]+Math.cos(a+Math.PI/2)*wi,p2[1]+Math.sin(a+Math.PI/2)*wi], p4=[p1[0]+Math.cos(a+Math.PI/2)*wi,p1[1]+Math.sin(a+Math.PI/2)*wi];
+        out+=polygon([p1,p2,p3,p4],i%2?f1:f3);
+      }
+      return out;
+    }
+
+    // Variation 7 — vertical chromatic type/grid reference.
+    out+=`<rect width="${w}" height="${h}" fill="${dark}"/>`;
+    const bars=Math.max(7,Math.floor(d*.95));
+    const palette=[accent,accent2,p.c,f1,f2,light];
+    for(let i=0;i<bars;i++){
+      const x=(i/bars)*w, bw=w/bars+.5;
+      const slices=Math.max(3,Math.floor(2+v*5));
+      for(let j=0;j<slices;j++){
+        const yy=h*(j/slices), hh=h/slices;
+        out+=rect(x,yy,bw,hh,palette[(i+j+index)%palette.length],Math.min(bw,hh)*.04,0,x+bw/2,yy+hh/2);
+      }
+    }
+    const titleSize=Math.round(Math.min(w,h)*.12);
+    out+=`<text x="${w*.06}" y="${h*.62}" font-size="${titleSize}" font-weight="900" font-family="Georgia, serif" fill="${p.c}">DESIGN</text>`;
+    out+=`<text x="${w*.06}" y="${h*.68}" font-size="${Math.round(titleSize*.24)}" font-weight="700" font-family="Arial, sans-serif" fill="${p.c}">VISUAL SYSTEM / CREATIVE STUDY</text>`;
     return out;
   }
 
   function layout(id,w,h,p,rnd,index){
-    switch(state.designMode){
-      case "blockWave": return blockWave(id,w,h,p,rnd,index);
-      case "bubbleBloom": return bubbleBloom(id,w,h,p,rnd,index);
-      case "orbitTiles": return orbitTiles(id,w,h,p,rnd,index);
-      case "archStack": return archStack(id,w,h,p,rnd);
-      case "capsuleGrid": return capsuleGrid(id,w,h,p,rnd);
-      case "prismTiles": return prismTiles(id,w,h,p,rnd);
-      case "radialFan": return radialFan(id,w,h,p,rnd);
-      case "cornerBlocks": return cornerBlocks(id,w,h,p,rnd);
-      case "ringCluster": return ringCluster(id,w,h,p,rnd);
-      case "mosaicSteps": return mosaicSteps(id,w,h,p,rnd);
-      case "gradientField": return gradientField(id,w,h,p,rnd);
-      case "blueEditorial": return blueEditorial(id,w,h,p,rnd,index);
-      case "pebbleScatter": return pebbleScatter(id,w,h,p,rnd);
-      default: return blockWave(id,w,h,p,rnd,index);
-    }
+    return chromaticEditorial(id,w,h,p,rnd,index);
   }
 
   function textLayer(index,w,h,p){
@@ -553,7 +407,7 @@
   }
 
   function randomize(){
-    const themes=Object.keys(THEMES), modes=["gradientEditorial","blueEditorial","blockWave","bubbleBloom","orbitTiles","archStack","capsuleGrid","prismTiles","radialFan","cornerBlocks","ringCluster","mosaicSteps","gradientField","pebbleScatter"];
+    const themes=Object.keys(THEMES), modes=["chromaticEditorial"];
     $("seed").value=Math.floor(Math.random()*99999999)+1;
     $("theme").value=themes[randomInt(Math.random,0,themes.length-1)]; syncThemeColors(true);
     $("designMode").value=modes[randomInt(Math.random,0,modes.length-1)];
